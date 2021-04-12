@@ -1,12 +1,13 @@
 import {App, MarkdownView, Plugin, PluginSettingTab, Setting} from 'obsidian';
 import {Editor} from "codemirror";
 
+import httpRequest from "obsidian-http-request";
 interface ImgurPluginSettings {
-    clientId: string;
+    uploadServer: string;
 }
 
 const DEFAULT_SETTINGS: ImgurPluginSettings = {
-    clientId: null
+    uploadServer: "http://127.0.0.1:36677"
 }
 
 export default class ImgurPlugin extends Plugin {
@@ -42,8 +43,8 @@ export default class ImgurPlugin extends Plugin {
             let originalPasteHandler = this.backupOriginalPasteHandler(cm);
 
             cm._handlers.paste[0] = (_: any, e: ClipboardEvent) => {
-                if (!this.settings.clientId) {
-                    console.warn("Please either set imgur client id or disable the plugin");
+                if (!this.settings.uploadServer) {
+                    console.warn("Please either set uploadServer or disable the plugin");
                     return originalPasteHandler(_, e);
                 }
 
@@ -73,14 +74,14 @@ export default class ImgurPlugin extends Plugin {
         this.insertTemporaryText(pasteId);
 
         try {
-            let resp = await this.uploadFile(file);
-            if (!resp.ok) {
-                let err = {response: resp, body: await resp.text()};
+            let resultBuffer = await this.uploadFile(file);
+            let resp = JSON.parse(resultBuffer.toString());
+            if (!resp.success) {
+                let err = {response: resp, body: resp.msg};
                 this.handleFailedUpload(pasteId, err)
                 return
             }
-            let json = await resp.json();
-            this.embedMarkDownImage(pasteId, json)
+            this.embedMarkDownImage(pasteId, resp)
         } catch (e) {
             this.handleFailedUpload(pasteId, e)
         }
@@ -96,18 +97,17 @@ export default class ImgurPlugin extends Plugin {
     }
 
     uploadFile(file: File) {
-        const data = new FormData();
-        data.append('image', file);
-
-        return fetch('https://api.imgur.com/3/image.json', {
+        // const data = new FormData();
+        // data.append('image', file);  
+        return httpRequest.request(this.settings.uploadServer, {
             method: 'POST',
-            headers: new Headers({'Authorization': 'Client-ID ' + this.settings.clientId}),
-            body: data
+            headers: {"Content-Type": "application/json"},
+            body: Buffer.from(JSON.stringify({"list": ["C:\\Users\\Administrator\\Desktop\\Snipaste_2021-04-12_22-31-56.png"]}))
         });
     }
 
     embedMarkDownImage(pasteId: string, jsonResponse: any) {
-        let imageUrl = jsonResponse.data.link;
+        let imageUrl = jsonResponse.result[0];
 
         let progressText = ImgurPlugin.progressTextFor(pasteId);
         let markDownImage = `![](${imageUrl})`;
@@ -154,12 +154,12 @@ class ImgurSettingTab extends PluginSettingTab {
         containerEl.empty();
         containerEl.createEl('h2', {text: 'imgur.com plugin settings'});
         new Setting(containerEl)
-            .setName('Client ID')
-            .setDesc(this.clientIdSettingDescription())
-            .addText(text => text.setPlaceholder('Enter your client_id')
-                .setValue(this.plugin.settings.clientId)
+            .setName('picGo服务端')
+            .setDesc("picGo服务端")
+            .addText(text => text.setPlaceholder('输入')
+                .setValue(this.plugin.settings.uploadServer)
                 .onChange(async (value) => {
-                    this.plugin.settings.clientId = value;
+                    this.plugin.settings.uploadServer = value;
                     await this.plugin.saveSettings();
                 }));
     }
