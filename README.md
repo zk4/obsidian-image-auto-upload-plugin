@@ -1,28 +1,11 @@
-Obsidian Imgur Plugin
+Obsidian Image Auto Upload Plugin
 ===
 
-This plugin uploads images from your clipboard right to [imgur.com](https://imgur.com/)
+这是一个利用 PicGo 自动上传剪切版图片的工具
 
-![obsidian-imgur-plugin-demo](https://user-images.githubusercontent.com/1719646/104514289-080e2480-5602-11eb-8a1d-c59feb37cb4f.gif)
-
-Getting started
----
-
-All you need to start using the plugin is imgur.com **Client ID**. 
-
-![image](https://user-images.githubusercontent.com/1719646/104515726-3bea4980-5604-11eb-92c5-9e448ff9c364.png)
-
-If you do not have an imgur.com account, you need to [get one](https://imgur.com/register) first.
-
-When you sign in, go to https://api.imgur.com/oauth2/addclient 
-and generate **Client ID** for Obsidan:
-- provide application name, i.e. "Obsidian"
-- choose "OAuth 2 authorization without a callback URL"
-- and specify your e-mail
-
-### Notes:
-- You only need **Client ID**, Client secret is not required.
-- Images uploaded by thins plugin get posted "anonymously" (without being tied to your imgur account). 
-  So you will not find pasted images in your imgur.com account.
-- There are daily [upload limits](https://apidocs.imgur.com/#rate-limits), 
-  but reaching them by manually making notes is hard to imagine.
+# 开始
+1. 安装 PicGo 工具，并进行配置，配置参考[官网](https://github.com/Molunerfinn/PicGo)
+2. 开启 PicGo 的 Server 服务，并记住端口号
+3. 安装插件
+4. 打开插件配置项，设置为http://127.0.0.1:{{PicGo设置的端口号}}/upload（例如：http://127.0.0.1:36677/upload）
+5. 接下来试试看能否上传成功

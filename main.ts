@@ -2,16 +2,16 @@ import {App, MarkdownView, Plugin, PluginSettingTab, Setting} from 'obsidian';
 import {Editor} from "codemirror";
 
 import httpRequest from "obsidian-http-request";
-interface ImgurPluginSettings {
+interface PluginSettings {
     uploadServer: string;
 }
 
-const DEFAULT_SETTINGS: ImgurPluginSettings = {
-    uploadServer: "http://127.0.0.1:36677"
+const DEFAULT_SETTINGS: PluginSettings = {
+    uploadServer: "http://127.0.0.1:36677/upload"
 }
 
-export default class ImgurPlugin extends Plugin {
-    settings: ImgurPluginSettings;
+export default class imageAutoUploadPlugin extends Plugin {
+    settings: PluginSettings;
     readonly cmAndHandlersMap = new Map;
 
     async loadSettings() {
@@ -34,7 +34,7 @@ export default class ImgurPlugin extends Plugin {
 
     async onload() {
         await this.loadSettings();
-        this.addSettingTab(new ImgurSettingTab(this.app, this));
+        this.addSettingTab(new SettingTab(this.app, this));
         this.setupImgurPasteHandler();
     }
 
@@ -88,7 +88,7 @@ export default class ImgurPlugin extends Plugin {
     }
 
     insertTemporaryText(pasteId: string) {
-        let progressText = ImgurPlugin.progressTextFor(pasteId);
+        let progressText = imageAutoUploadPlugin.progressTextFor(pasteId);
         this.getEditor().replaceSelection(progressText + "\n");
     }
 
@@ -101,24 +101,24 @@ export default class ImgurPlugin extends Plugin {
         // data.append('image', file);  
         return httpRequest.request(this.settings.uploadServer, {
             method: 'POST',
-            headers: {"Content-Type": "application/json"},
-            body: Buffer.from(JSON.stringify({"list": ["C:\\Users\\Administrator\\Desktop\\Snipaste_2021-04-12_22-31-56.png"]}))
+            // headers: {"Content-Type": "application/json"},
+            // body: Buffer.from(JSON.stringify({"list": ["E:\\Desktop\\aa.png"]}))
         });
     }
 
     embedMarkDownImage(pasteId: string, jsonResponse: any) {
         let imageUrl = jsonResponse.result[0];
 
-        let progressText = ImgurPlugin.progressTextFor(pasteId);
+        let progressText = imageAutoUploadPlugin.progressTextFor(pasteId);
         let markDownImage = `![](${imageUrl})`;
 
-        ImgurPlugin.replaceFirstOccurrence(this.getEditor(), progressText, markDownImage);
+        imageAutoUploadPlugin.replaceFirstOccurrence(this.getEditor(), progressText, markDownImage);
     };
 
     handleFailedUpload(pasteId: string, reason: any) {
-        console.error("Failed imgur request: ", reason);
-        let progressText = ImgurPlugin.progressTextFor(pasteId);
-        ImgurPlugin.replaceFirstOccurrence(this.getEditor(), progressText, "⚠️Imgur upload failed, check dev console");
+        console.error("Failed request: ", reason);
+        let progressText = imageAutoUploadPlugin.progressTextFor(pasteId);
+        imageAutoUploadPlugin.replaceFirstOccurrence(this.getEditor(), progressText, "⚠️upload failed, check dev console");
     };
 
     static replaceFirstOccurrence(editor: Editor, target: string, replacement: string) {
@@ -140,10 +140,10 @@ export default class ImgurPlugin extends Plugin {
     }
 }
 
-class ImgurSettingTab extends PluginSettingTab {
-    plugin: ImgurPlugin;
+class SettingTab extends PluginSettingTab {
+    plugin: imageAutoUploadPlugin;
 
-    constructor(app: App, plugin: ImgurPlugin) {
+    constructor(app: App, plugin: imageAutoUploadPlugin) {
         super(app, plugin);
         this.plugin = plugin;
     }
@@ -152,7 +152,7 @@ class ImgurSettingTab extends PluginSettingTab {
         let {containerEl} = this;
 
         containerEl.empty();
-        containerEl.createEl('h2', {text: 'imgur.com plugin settings'});
+        containerEl.createEl('h2', {text: 'plugin settings'});
         new Setting(containerEl)
             .setName('picGo服务端')
             .setDesc("picGo服务端")
@@ -162,17 +162,5 @@ class ImgurSettingTab extends PluginSettingTab {
                     this.plugin.settings.uploadServer = value;
                     await this.plugin.saveSettings();
                 }));
-    }
-
-    clientIdSettingDescription() {
-        const registerClientUrl = "https://api.imgur.com/oauth2/addclient";
-
-        let fragment = document.createDocumentFragment();
-        let a = document.createElement('a');
-        a.textContent = registerClientUrl
-        a.setAttribute("href", registerClientUrl);
-        fragment.append("Obtained from ");
-        fragment.append(a);
-        return fragment;
     }
 }
