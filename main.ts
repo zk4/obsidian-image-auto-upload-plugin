@@ -1,13 +1,18 @@
 import {App, MarkdownView, Plugin, PluginSettingTab, Setting} from 'obsidian';
 import {Editor} from "codemirror";
 
-import httpRequest from "obsidian-http-request";
+import fetch from 'node-fetch';
 interface PluginSettings {
     uploadServer: string;
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
     uploadServer: "http://127.0.0.1:36677/upload"
+}
+
+interface PicGoResponse {
+    success: string,
+    msg: string
 }
 
 export default class imageAutoUploadPlugin extends Plugin {
@@ -35,10 +40,10 @@ export default class imageAutoUploadPlugin extends Plugin {
     async onload() {
         await this.loadSettings();
         this.addSettingTab(new SettingTab(this.app, this));
-        this.setupImgurPasteHandler();
+        this.setupPasteHandler();
     }
 
-    setupImgurPasteHandler() {
+    setupPasteHandler() {
         this.registerCodeMirror((cm: any) => {
             let originalPasteHandler = this.backupOriginalPasteHandler(cm);
 
@@ -49,6 +54,7 @@ export default class imageAutoUploadPlugin extends Plugin {
                 }
 
                 let files = e.clipboardData.files;
+                console.log(e.clipboardData, e.clipboardData.getData("text"), files)
                 if (files.length === 0 || !files[0].type.startsWith("image")) {
                     return originalPasteHandler(_, e);
                 }
@@ -74,14 +80,15 @@ export default class imageAutoUploadPlugin extends Plugin {
         this.insertTemporaryText(pasteId);
 
         try {
-            let resultBuffer = await this.uploadFile(file);
-            let resp = JSON.parse(resultBuffer.toString());
-            if (!resp.success) {
-                let err = {response: resp, body: resp.msg};
+            let resp = await this.uploadFile(file);
+            let data: PicGoResponse = await resp.json()
+            
+            if (!data.success) {
+                let err = {response: data, body: data.msg};
                 this.handleFailedUpload(pasteId, err)
                 return
             }
-            this.embedMarkDownImage(pasteId, resp)
+            this.embedMarkDownImage(pasteId, data)
         } catch (e) {
             this.handleFailedUpload(pasteId, e)
         }
@@ -96,10 +103,10 @@ export default class imageAutoUploadPlugin extends Plugin {
         return `![Uploading file...${id}]()`
     }
 
-    uploadFile(file: File) {
+    uploadFile(file: File): Promise<any> {
         // const data = new FormData();
         // data.append('image', file);  
-        return httpRequest.request(this.settings.uploadServer, {
+        return fetch(this.settings.uploadServer, {
             method: 'POST',
             // headers: {"Content-Type": "application/json"},
             // body: Buffer.from(JSON.stringify({"list": ["E:\\Desktop\\aa.png"]}))
