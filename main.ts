@@ -15,8 +15,6 @@ import fetch from "node-fetch";
 import { resolve, normalize, parse, extname } from "path";
 import { exists, existsSync } from "fs";
 
-import { exec } from "child_process";
-
 const REGEX_IMAGE = /\!\[(.*?)\]\((.*?)\)/g;
 
 interface PluginSettings {
