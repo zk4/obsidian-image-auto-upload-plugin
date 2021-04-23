@@ -12,7 +12,7 @@ import { Editor } from "codemirror";
 
 import fetch from "node-fetch";
 
-import { resolve, normalize, parse } from "path";
+import { resolve, normalize, parse, extname } from "path";
 import { exists, existsSync } from "fs";
 
 import { exec } from "child_process";
@@ -74,6 +74,14 @@ export default class imageAutoUploadPlugin extends Plugin {
     });
   }
 
+  isAssetTypeAnImage(ext: String): Boolean {
+    return (
+      [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".svg", ".tiff"].indexOf(
+        ext.toLowerCase()
+      ) !== -1
+    );
+  }
+
   uploadAllFile() {
     let editor = this.getEditor();
     let value = editor.getValue();
@@ -86,30 +94,31 @@ export default class imageAutoUploadPlugin extends Plugin {
 
     let imageList = [];
 
-    for (const [index, match] of [...matches].entries()) {
+    for (const match of matches) {
       const imageName = match[1];
       const encodedUri = match[2];
-      const length = match[0].length;
       if (!encodedUri.startsWith("http")) {
         const abstractImageFile = decodeURI(
           resolve(basePath, thisPath.parent.path, encodedUri)
         );
-        if (existsSync(abstractImageFile)) {
+        if (
+          existsSync(abstractImageFile) &&
+          this.isAssetTypeAnImage(extname(abstractImageFile))
+        ) {
           imageList.push({
             path: abstractImageFile,
             name: imageName,
             source: match[0],
-            index: index,
           });
         }
       }
     }
-    console.log(imageList);
 
     this.uploadFiles(imageList.map(item => item.path)).then(res => {
       if (res.success) {
         let uploadUrlList = [...res.result];
         imageList.map(item => {
+          // gitea不能上传超过1M的数据，上传多张照片，错误的话会返回什么？还有待验证
           const uploadImage = uploadUrlList.shift();
           value = value.replaceAll(
             item.source,
@@ -133,8 +142,7 @@ export default class imageAutoUploadPlugin extends Plugin {
         }
 
         let files = e.clipboardData.files;
-        console.log(e.clipboardData, e.clipboardData.getData("text"), files);
-        if (files.length === 0 || !files[0].type.startsWith("match")) {
+        if (files.length === 0 || !files[0].type.startsWith("image")) {
           return originalPasteHandler(_, e);
         }
 
