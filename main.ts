@@ -88,7 +88,7 @@ export default class imageAutoUploadPlugin extends Plugin {
     const thisPath = this.app.vault.getAbstractFileByPath(
       this.app.workspace.getActiveFile().path
     );
-    const basePath = thisPath.vault.adapter.basePath;
+    const basePath = this.app.vault.adapter.basePath;
 
     let imageList = [];
 
