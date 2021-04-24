@@ -26,6 +26,7 @@
 # TODO
 
 - [x] 支持批量上传
+- [ ] 支持 yaml 设置是否开启已达到单个文档的控制
 - [ ] 支持 picgo-core
 - [ ] 支持复制系统图片文件，需要软件支持，详细见 [How to get file path in clipboard?](https://forum.obsidian.md/t/how-to-get-file-path-in-clipboard/16480)
 - [ ] 支持其他命令行上传
