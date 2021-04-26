@@ -7,8 +7,8 @@ import {
   Modal,
   Vault,
   FileSystemAdapter,
+  Editor,
 } from "obsidian";
-import { Editor } from "codemirror";
 
 import fetch from "node-fetch";
 
@@ -82,8 +82,8 @@ export default class imageAutoUploadPlugin extends Plugin {
 
   uploadAllFile() {
     let editor = this.getEditor();
-    let value = editor.getValue();
-    const matches = value.matchAll(REGEX_IMAGE);
+    let key = editor.getValue();
+    const matches = key.matchAll(REGEX_IMAGE);
 
     const thisPath = this.app.vault.getAbstractFileByPath(
       this.app.workspace.getActiveFile().path
@@ -118,13 +118,10 @@ export default class imageAutoUploadPlugin extends Plugin {
         imageList.map(item => {
           // gitea不能上传超过1M的数据，上传多张照片，错误的话会返回什么？还有待验证
           const uploadImage = uploadUrlList.shift();
-          value = value.replaceAll(
-            item.source,
-            `![${item.name}](${uploadImage})`
-          );
+          key = key.replaceAll(item.source, `![${item.name}](${uploadImage})`);
         });
 
-        this.getEditor().setValue(value);
+        this.getEditor().setValue(key);
       }
     });
   }
@@ -134,18 +131,23 @@ export default class imageAutoUploadPlugin extends Plugin {
       let originalPasteHandler = this.backupOriginalPasteHandler(cm);
 
       cm._handlers.paste[0] = (_: any, e: ClipboardEvent) => {
-        if (!this.settings.uploadServer) {
-          console.warn("Please either set uploadServer or disable the plugin");
-          return originalPasteHandler(_, e);
-        }
+        const allowUpload = this.getFrontmatterValue("image-auto-upload", true);
 
-        let files = e.clipboardData.files;
-        if (files.length === 0 || !files[0].type.startsWith("image")) {
-          return originalPasteHandler(_, e);
-        }
+        if (allowUpload) {
+          if (!this.settings.uploadServer) {
+            console.warn("Please either set uploadServer");
+            return originalPasteHandler(_, e);
+          }
 
-        for (let i = 0; i < files.length; i++) {
-          this.uploadFileAndEmbedImgurImage(files[i]).catch(console.error);
+          let files = e.clipboardData.files;
+          if (files.length === 0 || !files[0].type.startsWith("image")) {
+            return originalPasteHandler(_, e);
+          }
+          for (let i = 0; i < files.length; i++) {
+            this.uploadFileAndEmbedImgurImage(files[i]).catch(console.error);
+          }
+        } else {
+          return originalPasteHandler(_, e);
         }
       };
     });
@@ -248,25 +250,20 @@ export default class imageAutoUploadPlugin extends Plugin {
     }
   }
 
-  getEditor(): Editor {
-    let view = this.app.workspace.activeLeaf.view as MarkdownView;
-    return view.sourceMode.cmEditor;
-  }
-}
-
-class SampleModal extends Modal {
-  constructor(app: App) {
-    super(app);
+  getEditor() {
+    const mdView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    return mdView.editor;
   }
 
-  onOpen() {
-    let { contentEl } = this;
-    contentEl.setText("Woah!");
-  }
+  getFrontmatterValue(key: string, defaultValue: any = undefined) {
+    const path = this.app.workspace.getActiveFile().path;
+    const cache = this.app.metadataCache.getCache(path);
 
-  onClose() {
-    let { contentEl } = this;
-    contentEl.empty();
+    let value = defaultValue;
+    if (cache?.frontmatter && cache.frontmatter.hasOwnProperty(key)) {
+      value = cache.frontmatter[key];
+    }
+    return value;
   }
 }
 
@@ -290,8 +287,8 @@ class SettingTab extends PluginSettingTab {
         text
           .setPlaceholder("输入")
           .setValue(this.plugin.settings.uploadServer)
-          .onChange(async value => {
-            this.plugin.settings.uploadServer = value;
+          .onChange(async key => {
+            this.plugin.settings.uploadServer = key;
             await this.plugin.saveSettings();
           })
       );

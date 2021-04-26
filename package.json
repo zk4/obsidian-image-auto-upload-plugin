@@ -9,9 +9,9 @@
   },
   "keywords": [
     "obsidian.md",
-    "imgur.com"
+    "picgo"
   ],
-  "author": "Kirill Gavrilov",
+  "author": "renmu",
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^15.1.0",
