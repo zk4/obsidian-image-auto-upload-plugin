@@ -21,6 +21,12 @@ interface PluginSettings {
   uploadServer: string;
 }
 
+interface Image {
+  path: string;
+  name: string;
+  source: string;
+}
+
 const DEFAULT_SETTINGS: PluginSettings = {
   uploadServer: "http://127.0.0.1:36677/upload",
 };
@@ -88,9 +94,10 @@ export default class imageAutoUploadPlugin extends Plugin {
     const thisPath = this.app.vault.getAbstractFileByPath(
       this.app.workspace.getActiveFile().path
     );
-    const basePath = this.app.vault.adapter.basePath;
+    const basePath = (this.app.vault
+      .adapter as FileSystemAdapter).getBasePath();
 
-    let imageList = [];
+    let imageList: Image[] = [];
 
     for (const match of matches) {
       const imageName = match[1];
