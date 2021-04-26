@@ -16,6 +16,15 @@
 
 支持黏贴剪切板的图片的时候直接上传，目前不支持复制系统内图像直接上传，因为剪切板 api 无法获取该参数，详细见 [How to get file path in clipboard?](https://forum.obsidian.md/t/how-to-get-file-path-in-clipboard/16480)
 
+支持通过设置 `frontmatter` 来控制单个文件的上传，默认值为 `true`，控制关闭请将该值设置为 `false`
+
+```yaml
+---
+image-auto-upload: true
+---
+
+```
+
 ## 批量上传一个文件中的所有图像文件
 
 输入 `ctrl+P` 呼出面板，输入 `upload all images`，点击回车，就会自动开始上传。
@@ -26,7 +35,7 @@
 # TODO
 
 - [x] 支持批量上传
-- [ ] 支持 yaml 设置是否开启已达到单个文档的控制
+- [x] 支持 yaml 设置是否开启已达到单个文档的控制
 - [ ] 支持 picgo-core
 - [ ] 支持复制系统图片文件，需要软件支持，详细见 [How to get file path in clipboard?](https://forum.obsidian.md/t/how-to-get-file-path-in-clipboard/16480)
 - [ ] 支持其他命令行上传
