@@ -4,7 +4,7 @@
 
 This plugin can help you to auto upload image by [picgo](https://github.com/Molunerfinn/PicGo).
 
-# start
+# Start
 
 1. install the [picgo](https://github.com/Molunerfinn/PicGo) and config it
 2. open the tool and open the setting "设置 server"
@@ -12,9 +12,9 @@ This plugin can help you to auto upload image by [picgo](https://github.com/Molu
 4. open the plugin setting, and set the "picGo server" http://127.0.0.1:{{port in picgo}}/upload（example：http://127.0.0.1:36677/upload）
 5. try paste image
 
-# features
+# Features
 
-## 剪切板上传
+## Upload when paste image
 
 When you paste image to obsidian, this plugin will auto upload you image.
 
@@ -27,7 +27,7 @@ image-auto-upload: true
 
 ```
 
-## upload all local images file by command
+## Upload all local images file by command
 
 press `ctrl+P` and input `upload all images`，enter, then will auto upload all local images
 
