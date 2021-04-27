@@ -4,16 +4,14 @@ import {
   Plugin,
   PluginSettingTab,
   Setting,
-  Modal,
-  Vault,
   FileSystemAdapter,
   Editor,
 } from "obsidian";
 
 import fetch from "node-fetch";
 
-import { resolve, normalize, parse, extname } from "path";
-import { exists, existsSync } from "fs";
+import { resolve, extname } from "path";
+import { existsSync } from "fs";
 
 const REGEX_IMAGE = /\!\[(.*?)\]\((.*?)\)/g;
 
@@ -288,11 +286,11 @@ class SettingTab extends PluginSettingTab {
     containerEl.empty();
     containerEl.createEl("h2", { text: "plugin settings" });
     new Setting(containerEl)
-      .setName("picGo服务端")
-      .setDesc("picGo服务端")
+      .setName("picGo server")
+      .setDesc("picGo server")
       .addText(text =>
         text
-          .setPlaceholder("输入")
+          .setPlaceholder("please input picGo server")
           .setValue(this.plugin.settings.uploadServer)
           .onChange(async key => {
             this.plugin.settings.uploadServer = key;

@@ -1,22 +1,24 @@
+[中文文档](readme-zh.md)
+
 # Obsidian Image Auto Upload Plugin
 
-这是一个利用 PicGo 自动上传剪切版图片的工具
+This plugin can help you to auto upload image by [picgo](https://github.com/Molunerfinn/PicGo).
 
-# 开始
+# start
 
-1. 安装 PicGo 工具，并进行配置，配置参考[官网](https://github.com/Molunerfinn/PicGo)
-2. 开启 PicGo 的 Server 服务，并记住端口号
-3. 安装插件
-4. 打开插件配置项，设置为http://127.0.0.1:{{PicGo设置的端口号}}/upload（例如：http://127.0.0.1:36677/upload）
-5. 接下来试试看能否上传成功
+1. install the [picgo](https://github.com/Molunerfinn/PicGo) and config it
+2. open the tool and open the setting "设置 server"
+3. install the plugin in obsidian
+4. open the plugin setting, and set the "picGo server" http://127.0.0.1:{{port in picgo}}/upload（example：http://127.0.0.1:36677/upload）
+5. try paste image
 
-# 特性
+# features
 
 ## 剪切板上传
 
-支持黏贴剪切板的图片的时候直接上传，目前不支持复制系统内图像直接上传，因为剪切板 api 无法获取该参数，详细见 [How to get file path in clipboard?](https://forum.obsidian.md/t/how-to-get-file-path-in-clipboard/16480)
+When you paste image to obsidian, this plugin will auto upload you image.
 
-支持通过设置 `frontmatter` 来控制单个文件的上传，默认值为 `true`，控制关闭请将该值设置为 `false`
+You can set `image-auto-upload: false` in `frontmatter` to control one file
 
 ```yaml
 ---
@@ -25,17 +27,20 @@ image-auto-upload: true
 
 ```
 
-## 批量上传一个文件中的所有图像文件
+## upload all local images file by command
 
-输入 `ctrl+P` 呼出面板，输入 `upload all images`，点击回车，就会自动开始上传。
+press `ctrl+P` and input `upload all images`，enter, then will auto upload all local images
 
-！！警告
-由于 picgo 的 server 上传多张照片的 api 错误处理做得不是很好，代码可能会有 bug，可能在替换时出错。
+！！info
+Because of the weak upload api,this feature may have bugs.
 
 # TODO
 
-- [x] 支持批量上传
-- [x] 支持 yaml 设置是否开启已达到单个文档的控制
-- [ ] 支持 picgo-core
-- [ ] 支持复制系统图片文件，需要软件支持，详细见 [How to get file path in clipboard?](https://forum.obsidian.md/t/how-to-get-file-path-in-clipboard/16480)
-- [ ] 支持其他命令行上传
+- [x] upload all local images file by command
+- [x] support yaml to config if upload image
+- [ ] support picgo-core
+- [ ] support copy image from system, reference to this [How to get file path in clipboard?](https://forum.obsidian.md/t/how-to-get-file-path-in-clipboard/16480)
+
+# Thanks
+
+[obsidian-imgur-plugin](https://github.com/gavvvr/obsidian-imgur-plugin)
