@@ -13,6 +13,8 @@ import fetch from "node-fetch";
 import { resolve, extname } from "path";
 import { existsSync } from "fs";
 
+import { clipboard } from "electron";
+
 const REGEX_IMAGE = /\!\[(.*?)\]\((.*?)\)/g;
 
 interface PluginSettings {
@@ -76,10 +78,11 @@ export default class imageAutoUploadPlugin extends Plugin {
     });
   }
 
-  isAssetTypeAnImage(ext: String): Boolean {
+  isAssetTypeAnImage(path: string): Boolean {
+    console.log("ext", path);
     return (
       [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".svg", ".tiff"].indexOf(
-        ext.toLowerCase()
+        extname(path).toLowerCase()
       ) !== -1
     );
   }
@@ -106,7 +109,7 @@ export default class imageAutoUploadPlugin extends Plugin {
         );
         if (
           existsSync(abstractImageFile) &&
-          this.isAssetTypeAnImage(extname(abstractImageFile))
+          this.isAssetTypeAnImage(abstractImageFile)
         ) {
           imageList.push({
             path: abstractImageFile,
@@ -143,19 +146,51 @@ export default class imageAutoUploadPlugin extends Plugin {
             console.warn("Please either set uploadServer");
             return originalPasteHandler(_, e);
           }
-
           let files = e.clipboardData.files;
-          if (files.length === 0 || !files[0].type.startsWith("image")) {
+          if (
+            !this.isCopyImageFile() &&
+            (files.length === 0 || !files[0].type.startsWith("image"))
+          ) {
             return originalPasteHandler(_, e);
-          }
-          for (let i = 0; i < files.length; i++) {
-            this.uploadFileAndEmbedImgurImage(files[i]).catch(console.error);
+          } else {
+            this.uploadFileAndEmbedImgurImage().catch(console.error);
           }
         } else {
           return originalPasteHandler(_, e);
         }
       };
     });
+  }
+
+  isCopyImageFile() {
+    let filePath = "";
+    const os = this.getOS();
+
+    if (os === "Windows") {
+      var rawFilePath = clipboard.read("FileNameW");
+      filePath = rawFilePath.replace(
+        new RegExp(String.fromCharCode(0), "g"),
+        ""
+      );
+    } else if (os === "MacOS") {
+      filePath = clipboard.read("public.file-url").replace("file://", "");
+    } else {
+      filePath = "";
+    }
+    return this.isAssetTypeAnImage(filePath);
+  }
+
+  getOS() {
+    const { appVersion } = navigator;
+    if (appVersion.indexOf("Win") !== -1) {
+      return "Windows";
+    } else if (appVersion.indexOf("Mac") !== -1) {
+      return "MacOS";
+    } else if (appVersion.indexOf("X11") !== -1) {
+      return "Linux";
+    } else {
+      return "Unknown OS";
+    }
   }
 
   backupOriginalPasteHandler(cm: any) {
@@ -167,12 +202,12 @@ export default class imageAutoUploadPlugin extends Plugin {
     return this.cmAndHandlersMap.get(cm);
   }
 
-  async uploadFileAndEmbedImgurImage(file: File) {
+  async uploadFileAndEmbedImgurImage() {
     let pasteId = (Math.random() + 1).toString(36).substr(2, 5);
     this.insertTemporaryText(pasteId);
 
     try {
-      let resp = await this.uploadFile(file);
+      let resp = await this.uploadFileByClipboard();
       let data: PicGoResponse = await resp.json();
 
       if (!data.success) {
@@ -205,13 +240,9 @@ export default class imageAutoUploadPlugin extends Plugin {
     return data;
   }
 
-  uploadFile(file: File): Promise<any> {
-    // const data = new FormData();
-    // data.append('match', file);
+  uploadFileByClipboard(): Promise<any> {
     return fetch(this.settings.uploadServer, {
       method: "POST",
-      // headers: {"Content-Type": "application/json"},
-      // body: Buffer.from(JSON.stringify({"list": ["E:\\Desktop\\aa.png"]}))
     });
   }
 

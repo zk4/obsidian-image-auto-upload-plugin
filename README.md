@@ -18,7 +18,9 @@ This plugin can help you to auto upload image by [picgo](https://github.com/Molu
 
 When you paste image to obsidian, this plugin will auto upload you image.
 
-You can set `image-auto-upload: false` in `frontmatter` to control one file
+You can set `image-auto-upload: false` in `frontmatter` to control one file.
+
+support ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".svg", ".tiff"
 
 ```yaml
 ---
@@ -39,7 +41,7 @@ Because of the weak upload api,this feature may have bugs.
 - [x] upload all local images file by command
 - [x] support yaml to config if upload image
 - [ ] support picgo-core
-- [ ] support copy image from system, reference to this [How to get file path in clipboard?](https://forum.obsidian.md/t/how-to-get-file-path-in-clipboard/16480)
+- [x] support upload image from system copy selected image
 
 # Thanks
 

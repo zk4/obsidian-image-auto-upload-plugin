@@ -11,6 +11,6 @@ export default {
     format: "cjs",
     exports: "default",
   },
-  external: ["obsidian"],
+  external: ["obsidian", "electron"],
   plugins: [typescript(), nodeResolve({ browser: false }), commonjs(), json()],
 };
