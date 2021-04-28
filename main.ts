@@ -79,7 +79,6 @@ export default class imageAutoUploadPlugin extends Plugin {
   }
 
   isAssetTypeAnImage(path: string): Boolean {
-    console.log("ext", path);
     return (
       [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".svg", ".tiff"].indexOf(
         extname(path).toLowerCase()
