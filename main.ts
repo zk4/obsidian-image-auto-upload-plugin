@@ -88,6 +88,10 @@ export default class imageAutoUploadPlugin extends Plugin {
 
   uploadAllFile() {
     let editor = this.getEditor();
+    console.log("aaa", editor);
+    if (!editor) {
+      return false;
+    }
     let key = editor.getValue();
     const matches = key.matchAll(REGEX_IMAGE);
 
@@ -128,7 +132,7 @@ export default class imageAutoUploadPlugin extends Plugin {
           key = key.replaceAll(item.source, `![${item.name}](${uploadImage})`);
         });
 
-        this.getEditor().setValue(key);
+        editor.setValue(key);
       }
     });
   }
@@ -141,10 +145,15 @@ export default class imageAutoUploadPlugin extends Plugin {
         const allowUpload = this.getFrontmatterValue("image-auto-upload", true);
 
         if (allowUpload) {
+          const editor = this.getEditor();
           if (!this.settings.uploadServer) {
             console.warn("Please either set uploadServer");
             return originalPasteHandler(_, e);
           }
+          if (!editor) {
+            return originalPasteHandler(_, e);
+          }
+
           let files = e.clipboardData.files;
           if (
             !this.isCopyImageFile() &&
@@ -152,7 +161,7 @@ export default class imageAutoUploadPlugin extends Plugin {
           ) {
             return originalPasteHandler(_, e);
           } else {
-            this.uploadFileAndEmbedImgurImage().catch(console.error);
+            this.uploadFileAndEmbedImgurImage(editor).catch(console.error);
           }
         } else {
           return originalPasteHandler(_, e);
@@ -201,9 +210,9 @@ export default class imageAutoUploadPlugin extends Plugin {
     return this.cmAndHandlersMap.get(cm);
   }
 
-  async uploadFileAndEmbedImgurImage() {
+  async uploadFileAndEmbedImgurImage(editor: Editor) {
     let pasteId = (Math.random() + 1).toString(36).substr(2, 5);
-    this.insertTemporaryText(pasteId);
+    this.insertTemporaryText(editor, pasteId);
 
     try {
       let resp = await this.uploadFileByClipboard();
@@ -211,18 +220,18 @@ export default class imageAutoUploadPlugin extends Plugin {
 
       if (!data.success) {
         let err = { response: data, body: data.msg };
-        this.handleFailedUpload(pasteId, err);
+        this.handleFailedUpload(editor, pasteId, err);
         return;
       }
-      this.embedMarkDownImage(pasteId, data);
+      this.embedMarkDownImage(editor, pasteId, data);
     } catch (e) {
-      this.handleFailedUpload(pasteId, e);
+      this.handleFailedUpload(editor, pasteId, e);
     }
   }
 
-  insertTemporaryText(pasteId: string) {
+  insertTemporaryText(editor: Editor, pasteId: string) {
     let progressText = imageAutoUploadPlugin.progressTextFor(pasteId);
-    this.getEditor().replaceSelection(progressText + "\n");
+    editor.replaceSelection(progressText + "\n");
   }
 
   private static progressTextFor(id: string) {
@@ -245,24 +254,24 @@ export default class imageAutoUploadPlugin extends Plugin {
     });
   }
 
-  embedMarkDownImage(pasteId: string, jsonResponse: any) {
+  embedMarkDownImage(editor: Editor, pasteId: string, jsonResponse: any) {
     let imageUrl = jsonResponse.result[0];
 
     let progressText = imageAutoUploadPlugin.progressTextFor(pasteId);
     let markDownImage = `![](${imageUrl})`;
 
     imageAutoUploadPlugin.replaceFirstOccurrence(
-      this.getEditor(),
+      editor,
       progressText,
       markDownImage
     );
   }
 
-  handleFailedUpload(pasteId: string, reason: any) {
+  handleFailedUpload(editor: Editor, pasteId: string, reason: any) {
     console.error("Failed request: ", reason);
     let progressText = imageAutoUploadPlugin.progressTextFor(pasteId);
     imageAutoUploadPlugin.replaceFirstOccurrence(
-      this.getEditor(),
+      editor,
       progressText,
       "⚠️upload failed, check dev console"
     );
