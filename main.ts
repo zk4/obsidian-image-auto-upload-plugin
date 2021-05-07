@@ -287,11 +287,19 @@ export default class imageAutoUploadPlugin extends Plugin {
 
   getEditor() {
     const mdView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    return mdView.editor;
+    if (mdView) {
+      return mdView.editor;
+    } else {
+      return null;
+    }
   }
 
   getFrontmatterValue(key: string, defaultValue: any = undefined) {
-    const path = this.app.workspace.getActiveFile().path;
+    const file = this.app.workspace.getActiveFile();
+    if (!file) {
+      return undefined;
+    }
+    const path = file.path;
     const cache = this.app.metadataCache.getCache(path);
 
     let value = defaultValue;
