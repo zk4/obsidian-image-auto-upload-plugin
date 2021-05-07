@@ -91,6 +91,8 @@ export default class imageAutoUploadPlugin extends Plugin {
     if (!editor) {
       return false;
     }
+
+    const { left, top } = editor.getScrollInfo();
     let key = editor.getValue();
     const matches = key.matchAll(REGEX_IMAGE);
 
@@ -132,6 +134,7 @@ export default class imageAutoUploadPlugin extends Plugin {
         });
 
         editor.setValue(key);
+        editor.scrollTo(left, top);
       }
     });
   }
