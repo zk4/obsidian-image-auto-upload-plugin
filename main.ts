@@ -88,7 +88,6 @@ export default class imageAutoUploadPlugin extends Plugin {
 
   uploadAllFile() {
     let editor = this.getEditor();
-    console.log("aaa", editor);
     if (!editor) {
       return false;
     }
