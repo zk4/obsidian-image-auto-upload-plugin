@@ -38,7 +38,7 @@ interface PicGoResponse {
 
 export default class imageAutoUploadPlugin extends Plugin {
   settings: PluginSettings;
-  readonly cmAndHandlersMap = new Map();
+  readonly cmAndHandlersMap = new WeakMap();
 
   async loadSettings() {
     this.settings = Object.assign(DEFAULT_SETTINGS, await this.loadData());
@@ -49,12 +49,9 @@ export default class imageAutoUploadPlugin extends Plugin {
   }
 
   onunload() {
-    this.restoreOriginalHandlers();
-  }
-
-  restoreOriginalHandlers() {
-    this.cmAndHandlersMap.forEach((originalHandler, cm) => {
-      cm._handlers.paste[0] = originalHandler;
+    this.app.workspace.iterateCodeMirrors(cm => {
+      // @ts-ignore
+      cm._handlers.paste[0] = this.cmAndHandlersMap.get(cm);
     });
   }
 
