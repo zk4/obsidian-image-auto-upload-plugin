@@ -6,6 +6,10 @@ import {
   Setting,
   FileSystemAdapter,
   Editor,
+  Menu,
+  MenuItem,
+  TFile,
+  normalizePath,
 } from "obsidian";
 
 import fetch from "node-fetch";
@@ -73,7 +77,54 @@ export default class imageAutoUploadPlugin extends Plugin {
         return false;
       },
     });
+
+    this.app.workspace.on(
+      "file-menu",
+      (menu: Menu, file: TFile, source: string) => {
+        console.log(file, source);
+        if (!this.isAssetTypeAnImage(file.path)) {
+          return false;
+        }
+        menu.addItem((item: MenuItem) => {
+          item.setTitle("上传").onClick(evt => {
+            let folderpath = file.path;
+            if (!(file instanceof TFile)) {
+              return false;
+            }
+
+            folderpath = normalizePath(
+              file.path.substr(0, file.path.lastIndexOf(file.name))
+            );
+            const basePath = (
+              this.app.vault.adapter as FileSystemAdapter
+            ).getBasePath();
+
+            // console.log(
+            //   normalizePath(file.path),
+            //   file.path.substr(0, file.path.lastIndexOf(file.name)),
+            //   decodeURI(resolve(basePath, file.path))
+            // );
+            const uri = decodeURI(resolve(basePath, file.path));
+            const editor = this.getEditor();
+            this.uploadFiles([uri]).then(res => {
+              if (res.success) {
+                let uploadUrl = [...res.result][0];
+                const { left, top } = editor.getScrollInfo();
+                // let value = editor
+                //   .getValue()
+                //   .replaceAll(item.source, `![${item.name}](${uploadImage})`);
+
+                // editor.setValue(key);
+                // editor.scrollTo(left, top);
+              }
+            });
+            // this.createDrawing(this.getNextDefaultFilename(), false, folderpath);
+          });
+        });
+      }
+    );
   }
+  uploadFile() {}
 
   isAssetTypeAnImage(path: string): Boolean {
     return (
@@ -96,8 +147,9 @@ export default class imageAutoUploadPlugin extends Plugin {
     const thisPath = this.app.vault.getAbstractFileByPath(
       this.app.workspace.getActiveFile().path
     );
-    const basePath = (this.app.vault
-      .adapter as FileSystemAdapter).getBasePath();
+    const basePath = (
+      this.app.vault.adapter as FileSystemAdapter
+    ).getBasePath();
 
     let imageList: Image[] = [];
 
