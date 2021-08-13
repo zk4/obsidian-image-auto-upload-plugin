@@ -9,12 +9,11 @@ import {
   Menu,
   MenuItem,
   TFile,
-  normalizePath,
 } from "obsidian";
 
 import fetch from "node-fetch";
 
-import { resolve, extname } from "path";
+import { resolve, extname, relative } from "path";
 import { existsSync } from "fs";
 
 import { clipboard } from "electron";
@@ -78,51 +77,58 @@ export default class imageAutoUploadPlugin extends Plugin {
       },
     });
 
+    this.registerFileMenu();
+  }
+
+  registerFileMenu() {
     this.app.workspace.on(
       "file-menu",
       (menu: Menu, file: TFile, source: string) => {
-        console.log(file, source);
         if (!this.isAssetTypeAnImage(file.path)) {
           return false;
         }
         menu.addItem((item: MenuItem) => {
-          item.setTitle("上传").onClick(evt => {
-            let folderpath = file.path;
+          item.setTitle("upload").onClick(() => {
             if (!(file instanceof TFile)) {
               return false;
             }
 
-            folderpath = normalizePath(
-              file.path.substr(0, file.path.lastIndexOf(file.name))
-            );
             const basePath = (
               this.app.vault.adapter as FileSystemAdapter
             ).getBasePath();
 
-            // console.log(
-            //   normalizePath(file.path),
-            //   file.path.substr(0, file.path.lastIndexOf(file.name)),
-            //   decodeURI(resolve(basePath, file.path))
-            // );
             const uri = decodeURI(resolve(basePath, file.path));
             const editor = this.getEditor();
             this.uploadFiles([uri]).then(res => {
               if (res.success) {
                 let uploadUrl = [...res.result][0];
-                const { left, top } = editor.getScrollInfo();
-                // let value = editor
-                //   .getValue()
-                //   .replaceAll(item.source, `![${item.name}](${uploadImage})`);
 
-                // editor.setValue(key);
-                // editor.scrollTo(left, top);
+                let value = editor
+                  .getValue()
+                  .replaceAll(
+                    encodeURI(
+                      relative(
+                        this.app.workspace.getActiveFile().parent.path,
+                        file.path
+                      ).replaceAll("\\", "/")
+                    ),
+                    uploadUrl
+                  );
+                this.setValue(value);
               }
             });
-            // this.createDrawing(this.getNextDefaultFilename(), false, folderpath);
           });
         });
       }
     );
+  }
+
+  setValue(value: string) {
+    const editor = this.getEditor();
+    const { left, top } = editor.getScrollInfo();
+
+    editor.setValue(value);
+    editor.scrollTo(left, top);
   }
   uploadFile() {}
 
