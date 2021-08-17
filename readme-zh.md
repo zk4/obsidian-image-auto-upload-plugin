@@ -19,19 +19,19 @@
 
 支持 ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".svg", ".tiff"
 
+该功能在 PicGo 2.3.0-beta7 版本中无法使用，请更换其他版本
+
 ```yaml
 ---
 image-auto-upload: true
 ---
-
 ```
 
 ## 批量上传一个文件中的所有图像文件
 
 输入 `ctrl+P` 呼出面板，输入 `upload all images`，点击回车，就会自动开始上传。
 
-！！警告
-由于 picgo 的 server 上传多张照片的 api 错误处理做得不是很好，代码可能会有 bug，可能在替换时出错。
+## 支持右键菜单上传图片
 
 # TODO
 
