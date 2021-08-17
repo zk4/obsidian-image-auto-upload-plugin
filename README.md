@@ -22,19 +22,21 @@ You can set `image-auto-upload: false` in `frontmatter` to control one file.
 
 support ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".svg", ".tiff"
 
+Because of the [bug](https://github.com/renmu123/obsidian-image-auto-upload-plugin/issues/2) in PicGo 2.3.0-beta7, you can not use this feature. you can install other PicGo version.
+
 ```yaml
 ---
 image-auto-upload: true
 ---
-
 ```
 
 ## Upload all local images file by command
 
 press `ctrl+P` and input `upload all images`，enter, then will auto upload all local images
 
-！！info
-Because of the weak upload api,this feature may have bugs.
+## Upload image by contextMenu
+
+Now you can upload image by contextMenu in edit mode.
 
 # TODO
 
