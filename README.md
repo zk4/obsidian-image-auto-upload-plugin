@@ -34,6 +34,10 @@ image-auto-upload: true
 
 press `ctrl+P` and input `upload all images`，enter, then will auto upload all local images
 
+## download all internet to loacl
+
+press `ctrl+P` and input `download all images`，enter, then will auto download all internet images to loacl.only test in win10
+
 ## Upload image by contextMenu
 
 Now you can upload image by contextMenu in edit mode.
