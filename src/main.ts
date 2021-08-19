@@ -7,6 +7,7 @@ import {
   MenuItem,
   TFile,
   normalizePath,
+  Notice,
 } from "obsidian";
 
 import { resolve, extname, relative, join } from "path";
@@ -138,6 +139,12 @@ export default class imageAutoUploadPlugin extends Plugin {
     });
 
     this.setValue(value);
+
+    new Notice(
+      `all: ${fileArray.length}\nsuccess: ${imageArray.length}\nfailed: ${
+        fileArray.length - imageArray.length
+      }`
+    );
   }
 
   // 获取当前文件所属的附件文件夹
