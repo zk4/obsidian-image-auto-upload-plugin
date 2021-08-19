@@ -134,7 +134,6 @@ export default class imageAutoUploadPlugin extends Plugin {
     let editor = this.getEditor();
     let value = editor.getValue();
     imageArray.map(image => {
-      console.log("image", value, image);
       value = value.replace(image.source, `![${image.name}](${image.path})`);
     });
 
@@ -336,7 +335,10 @@ export default class imageAutoUploadPlugin extends Plugin {
       let originalPasteHandler = this.backupOriginalPasteHandler(cm);
 
       cm._handlers.paste[0] = (_: any, e: ClipboardEvent) => {
-        const allowUpload = this.getFrontmatterValue("image-auto-upload", true);
+        const allowUpload = this.getFrontmatterValue(
+          "image-auto-upload",
+          this.settings.uploadByClipSwitch
+        );
 
         if (allowUpload) {
           const editor = this.getEditor();
@@ -400,7 +402,6 @@ export default class imageAutoUploadPlugin extends Plugin {
       let originalHandler = cm._handlers.paste[0];
       this.cmAndHandlersMap.set(cm, originalHandler);
     }
-
     return this.cmAndHandlersMap.get(cm);
   }
 
