@@ -8,6 +8,7 @@ import {
   TFile,
   normalizePath,
   Notice,
+  addIcon,
 } from "obsidian";
 
 import { resolve, extname, relative, join } from "path";
@@ -51,6 +52,12 @@ export default class imageAutoUploadPlugin extends Plugin {
   }
 
   async onload() {
+    addIcon(
+      "upload",
+      `<svg t="1636630783429" class="icon" viewBox="0 0 100 100" version="1.1" p-id="4649" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 71.638 35.336 L 79.408 35.336 C 83.7 35.336 87.178 38.662 87.178 42.765 L 87.178 84.864 C 87.178 88.969 83.7 92.295 79.408 92.295 L 17.249 92.295 C 12.957 92.295 9.479 88.969 9.479 84.864 L 9.479 42.765 C 9.479 38.662 12.957 35.336 17.249 35.336 L 25.019 35.336 L 25.019 42.765 L 17.249 42.765 L 17.249 84.864 L 79.408 84.864 L 79.408 42.765 L 71.638 42.765 L 71.638 35.336 Z M 49.014 10.179 L 67.326 27.688 L 61.835 32.942 L 52.849 24.352 L 52.849 59.731 L 45.078 59.731 L 45.078 24.455 L 36.194 32.947 L 30.702 27.692 L 49.012 10.181 Z" p-id="4650" fill="#8a8a8a"></path>
+    </svg>`
+    );
     await this.loadSettings();
     this.addSettingTab(new SettingTab(this.app, this));
     this.setupPasteHandler();
@@ -207,36 +214,39 @@ export default class imageAutoUploadPlugin extends Plugin {
           return false;
         }
         menu.addItem((item: MenuItem) => {
-          item.setTitle("upload").onClick(() => {
-            if (!(file instanceof TFile)) {
-              return false;
-            }
-
-            const basePath = (
-              this.app.vault.adapter as FileSystemAdapter
-            ).getBasePath();
-
-            const uri = decodeURI(resolve(basePath, file.path));
-            const editor = this.getEditor();
-            this.uploadFiles([uri]).then(res => {
-              if (res.success) {
-                let uploadUrl = [...res.result][0];
-
-                let value = editor
-                  .getValue()
-                  .replaceAll(
-                    encodeURI(
-                      relative(
-                        this.app.workspace.getActiveFile().parent.path,
-                        file.path
-                      ).replaceAll("\\", "/")
-                    ),
-                    uploadUrl
-                  );
-                this.setValue(value);
+          item
+            .setTitle("upload")
+            .setIcon("upload")
+            .onClick(() => {
+              if (!(file instanceof TFile)) {
+                return false;
               }
+
+              const basePath = (
+                this.app.vault.adapter as FileSystemAdapter
+              ).getBasePath();
+
+              const uri = decodeURI(resolve(basePath, file.path));
+              const editor = this.getEditor();
+              this.uploadFiles([uri]).then(res => {
+                if (res.success) {
+                  let uploadUrl = [...res.result][0];
+
+                  let value = editor
+                    .getValue()
+                    .replaceAll(
+                      encodeURI(
+                        relative(
+                          this.app.workspace.getActiveFile().parent.path,
+                          file.path
+                        ).replaceAll("\\", "/")
+                      ),
+                      uploadUrl
+                    );
+                  this.setValue(value);
+                }
+              });
             });
-          });
         });
       }
     );
