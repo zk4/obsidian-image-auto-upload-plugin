@@ -11,7 +11,7 @@ import {
   addIcon,
 } from "obsidian";
 
-import { resolve, extname, relative, join } from "path";
+import { resolve, extname, relative, join, parse } from "path";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 
 import fetch from "node-fetch";
@@ -92,7 +92,7 @@ export default class imageAutoUploadPlugin extends Plugin {
 
     this.registerFileMenu();
   }
-  ///TODO: asset路径处理（assets文件夹不存在处理），下载图片失败处理，已存在同名图片处理，显示处理情况（用modal）
+  ///TODO: asset路径处理（assets文件夹不存在处理），下载图片失败处理
   async downloadAllImageFiles() {
     const folderPath = this.getFileAssetPath();
     const fileArray = this.getAllFiles();
@@ -111,15 +111,18 @@ export default class imageAutoUploadPlugin extends Plugin {
       if (!this.isAnImage(asset.substr(asset.lastIndexOf(".")))) {
         continue;
       }
-
-      let [name, ext] = asset.split(".");
+      let [name, ext] = [
+        decodeURI(parse(asset).name).replaceAll(/[\\\\/:*?\"<>|]/g, "-"),
+        parse(asset).ext,
+      ];
+      // 如果文件名已存在，则用随机值替换
       if (existsSync(join(folderPath, encodeURI(asset)))) {
         name = (Math.random() + 1).toString(36).substr(2, 5);
       }
 
       const response = await this.download(
         url,
-        join(folderPath, `${name}.${ext}`)
+        join(folderPath, `${name}${ext}`)
       );
       if (response.ok) {
         const activeFolder = this.app.vault.getAbstractFileByPath(
