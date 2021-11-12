@@ -218,7 +218,7 @@ export default class imageAutoUploadPlugin extends Plugin {
         }
         menu.addItem((item: MenuItem) => {
           item
-            .setTitle("upload")
+            .setTitle("Upload")
             .setIcon("upload")
             .onClick(() => {
               if (!(file instanceof TFile)) {
