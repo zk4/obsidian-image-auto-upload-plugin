@@ -11,7 +11,7 @@ import {
   addIcon,
 } from "obsidian";
 
-import { resolve, extname, relative, join, parse } from "path";
+import { resolve, extname, relative, join, parse, posix } from "path";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 
 import fetch from "node-fetch";
@@ -322,7 +322,10 @@ export default class imageAutoUploadPlugin extends Plugin {
       const encodedUri = match.path;
       if (!encodedUri.startsWith("http")) {
         const abstractImageFile = decodeURI(
-          resolve(basePath, thisPath.parent.path, encodedUri)
+          join(
+            basePath,
+            posix.resolve(posix.join("/", thisPath.parent.path), encodedUri)
+          )
         );
         if (
           existsSync(abstractImageFile) &&
