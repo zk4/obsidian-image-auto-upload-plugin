@@ -37,6 +37,8 @@ image-auto-upload: true
 
 ## 支持右键菜单上传图片
 
+## 支持拖拽上传
+
 # TODO
 
 - [x] 支持批量上传

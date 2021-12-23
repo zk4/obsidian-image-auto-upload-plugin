@@ -42,6 +42,8 @@ press `ctrl+P` and input `download all images`，enter, then will auto download 
 
 Now you can upload image by contextMenu in edit mode.
 
+## Support drag-and-drop
+
 # TODO
 
 - [x] upload all local images file by command

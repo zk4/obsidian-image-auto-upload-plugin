@@ -363,6 +363,33 @@ export default class imageAutoUploadPlugin extends Plugin {
         }
       }
     );
+    this.app.workspace.on(
+      "editor-drop",
+      async (evt: DragEvent, editor: Editor, markdownView: MarkdownView) => {
+        let files = evt.dataTransfer.files;
+        if (files.length !== 0 || files[0].type.startsWith("image")) {
+          let sendFiles: Array<String> = [];
+          let files = evt.dataTransfer.files;
+          Array.from(files).forEach((item, index) => {
+            sendFiles.push(item.path);
+          });
+          evt.preventDefault();
+
+          const data = await this.uploadFiles(sendFiles);
+          console.log(data);
+
+          if (data.success) {
+            data.result.map((value: string) => {
+              let pasteId = (Math.random() + 1).toString(36).substr(2, 5);
+              this.insertTemporaryText(editor, pasteId);
+              this.embedMarkDownImage(editor, pasteId, value);
+            });
+          } else {
+            new Notice("Upload error");
+          }
+        }
+      }
+    );
   }
 
   isCopyImageFile() {
@@ -417,7 +444,7 @@ export default class imageAutoUploadPlugin extends Plugin {
         this.handleFailedUpload(editor, pasteId, err);
         return;
       }
-      this.embedMarkDownImage(editor, pasteId, data);
+      this.embedMarkDownImage(editor, pasteId, data.result[0]);
     } catch (e) {
       this.handleFailedUpload(editor, pasteId, e);
     }
@@ -448,9 +475,7 @@ export default class imageAutoUploadPlugin extends Plugin {
     });
   }
 
-  embedMarkDownImage(editor: Editor, pasteId: string, jsonResponse: any) {
-    let imageUrl = jsonResponse.result[0];
-
+  embedMarkDownImage(editor: Editor, pasteId: string, imageUrl: any) {
     let progressText = imageAutoUploadPlugin.progressTextFor(pasteId);
     let markDownImage = `![](${imageUrl})`;
 
