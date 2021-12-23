@@ -1,6 +1,6 @@
 {
   "name": "obsidian-imgur-plugin",
-  "version": "1.1.4",
+  "version": "1.2.0",
   "description": "This plugin uploads images from your clipboard by picGo and embeds uploaded image to your note",
   "main": "main.js",
   "scripts": {
@@ -21,7 +21,7 @@
     "@types/electron": "^1.6.10",
     "@types/node": "^14.14.2",
     "@types/node-fetch": "^2.5.10",
-    "obsidian": "^0.12.11",
+    "obsidian": "^0.13.11",
     "rollup": "^2.32.1",
     "tslib": "^2.0.3",
     "typescript": "^4.0.3"

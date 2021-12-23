@@ -44,12 +44,7 @@ export default class imageAutoUploadPlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
-  onunload() {
-    this.app.workspace.iterateCodeMirrors(cm => {
-      // @ts-ignore
-      cm._handlers.paste[0] = this.cmAndHandlersMap.get(cm);
-    });
-  }
+  onunload() {}
 
   async onload() {
     addIcon(
@@ -354,39 +349,20 @@ export default class imageAutoUploadPlugin extends Plugin {
   }
 
   setupPasteHandler() {
-    this.registerCodeMirror((cm: any) => {
-      let originalPasteHandler = this.backupOriginalPasteHandler(cm);
-
-      cm._handlers.paste[0] = (_: any, e: ClipboardEvent) => {
-        const allowUpload = this.getFrontmatterValue(
-          "image-auto-upload",
-          this.settings.uploadByClipSwitch
-        );
-
-        if (allowUpload) {
-          const editor = this.getEditor();
-          if (!this.settings.uploadServer) {
-            console.warn("Please either set uploadServer");
-            return originalPasteHandler(_, e);
-          }
-          if (!editor) {
-            return originalPasteHandler(_, e);
-          }
-
-          let files = e.clipboardData.files;
-          if (
-            !this.isCopyImageFile() &&
-            (files.length === 0 || !files[0].type.startsWith("image"))
-          ) {
-            return originalPasteHandler(_, e);
-          } else {
-            this.uploadFileAndEmbedImgurImage(editor).catch(console.error);
-          }
-        } else {
-          return originalPasteHandler(_, e);
+    this.app.workspace.on(
+      "editor-paste",
+      (evt: ClipboardEvent, editor: Editor, markdownView: MarkdownView) => {
+        let files = evt.clipboardData.files;
+        if (
+          this.isCopyImageFile() ||
+          files.length !== 0 ||
+          files[0].type.startsWith("image")
+        ) {
+          this.uploadFileAndEmbedImgurImage(editor).catch(console.error);
+          evt.preventDefault();
         }
-      };
-    });
+      }
+    );
   }
 
   isCopyImageFile() {
