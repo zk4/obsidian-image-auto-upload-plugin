@@ -352,11 +352,17 @@ export default class imageAutoUploadPlugin extends Plugin {
     this.app.workspace.on(
       "editor-paste",
       (evt: ClipboardEvent, editor: Editor, markdownView: MarkdownView) => {
+        const allowUpload = this.getFrontmatterValue(
+          "image-auto-upload",
+          this.settings.uploadByClipSwitch
+        );
+
         let files = evt.clipboardData.files;
         if (
-          this.isCopyImageFile() ||
-          files.length !== 0 ||
-          files[0].type.startsWith("image")
+          allowUpload &&
+          (this.isCopyImageFile() ||
+            files.length !== 0 ||
+            files[0].type.startsWith("image"))
         ) {
           this.uploadFileAndEmbedImgurImage(editor).catch(console.error);
           evt.preventDefault();
@@ -366,26 +372,31 @@ export default class imageAutoUploadPlugin extends Plugin {
     this.app.workspace.on(
       "editor-drop",
       async (evt: DragEvent, editor: Editor, markdownView: MarkdownView) => {
-        let files = evt.dataTransfer.files;
-        if (files.length !== 0 || files[0].type.startsWith("image")) {
-          let sendFiles: Array<String> = [];
+        const allowUpload = this.getFrontmatterValue(
+          "image-auto-upload",
+          this.settings.uploadByClipSwitch
+        );
+        if (allowUpload) {
           let files = evt.dataTransfer.files;
-          Array.from(files).forEach((item, index) => {
-            sendFiles.push(item.path);
-          });
-          evt.preventDefault();
-
-          const data = await this.uploadFiles(sendFiles);
-          console.log(data);
-
-          if (data.success) {
-            data.result.map((value: string) => {
-              let pasteId = (Math.random() + 1).toString(36).substr(2, 5);
-              this.insertTemporaryText(editor, pasteId);
-              this.embedMarkDownImage(editor, pasteId, value);
+          if (files.length !== 0 || files[0].type.startsWith("image")) {
+            let sendFiles: Array<String> = [];
+            let files = evt.dataTransfer.files;
+            Array.from(files).forEach((item, index) => {
+              sendFiles.push(item.path);
             });
-          } else {
-            new Notice("Upload error");
+            evt.preventDefault();
+
+            const data = await this.uploadFiles(sendFiles);
+
+            if (data.success) {
+              data.result.map((value: string) => {
+                let pasteId = (Math.random() + 1).toString(36).substr(2, 5);
+                this.insertTemporaryText(editor, pasteId);
+                this.embedMarkDownImage(editor, pasteId, value);
+              });
+            } else {
+              new Notice("Upload error");
+            }
           }
         }
       }
