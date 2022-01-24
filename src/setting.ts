@@ -4,11 +4,15 @@ import imageAutoUploadPlugin from "./main";
 export interface PluginSettings {
   uploadByClipSwitch: boolean;
   uploadServer: string;
+  uploader: string;
+  picgoCorePath: string;
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
   uploadByClipSwitch: true,
+  uploader: "PicGO",
   uploadServer: "http://127.0.0.1:36677/upload",
+  picgoCorePath: "",
 };
 
 export class SettingTab extends PluginSettingTab {
@@ -39,14 +43,43 @@ export class SettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("picGo server")
-      .setDesc("picGo server")
+      .setName("Default uploader")
+      .setDesc("Default uploader")
+      .addDropdown(cb =>
+        cb
+          .addOption("PicGo", "PicGo(app)")
+          .addOption("PicGo-Core", "PicGo-Core")
+          .setValue(this.plugin.settings.uploader)
+          .onChange(async value => {
+            this.plugin.settings.uploader = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("PicGo server")
+      .setDesc("PicGo server")
       .addText(text =>
         text
-          .setPlaceholder("please input picGo server")
+          .setPlaceholder("Please input PicGo server")
           .setValue(this.plugin.settings.uploadServer)
           .onChange(async key => {
             this.plugin.settings.uploadServer = key;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("PicGo-Core path")
+      .setDesc(
+        "Please input PicGo-Core path, default using environment variables"
+      )
+      .addText(text =>
+        text
+          .setPlaceholder("")
+          .setValue(this.plugin.settings.picgoCorePath)
+          .onChange(async value => {
+            this.plugin.settings.picgoCorePath = value;
             await this.plugin.saveSettings();
           })
       );

@@ -13,6 +13,9 @@ import {
 
 import { resolve, extname, relative, join, parse, posix } from "path";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
+import { execSync, exec } from "child_process";
+// import { util } from "util";
+// const exec = util.promisify(require("child_process").exec);
 
 import fetch from "node-fetch";
 import { clipboard } from "electron";
@@ -364,7 +367,40 @@ export default class imageAutoUploadPlugin extends Plugin {
             files.length !== 0 ||
             files[0].type.startsWith("image"))
         ) {
-          this.uploadFileAndEmbedImgurImage(editor).catch(console.error);
+          if (this.settings.uploader === "PicGo") {
+            this.uploadFileAndEmbedImgurImage(
+              editor,
+              async (editor: Editor, pasteId: string) => {
+                let resp = await this.uploadFileByClipboard();
+                let data: PicGoResponse = await resp.json();
+
+                if (!data.success) {
+                  let err = { response: data, body: data.msg };
+                  this.handleFailedUpload(editor, pasteId, err);
+                  return;
+                }
+                const url = data.result[0];
+                return url;
+              }
+            ).catch(console.error);
+          } else if (this.settings.uploader === "PicGo-Core") {
+            this.uploadFileAndEmbedImgurImage(
+              editor,
+              async (editor: Editor, pasteId: string) => {
+                // let resp = await this.uploadFileByClipboard();
+                // let data: PicGoResponse = await resp.json();
+
+                // if (!data.success) {
+                //   let err = { response: data, body: data.msg };
+                //   this.handleFailedUpload(editor, pasteId, err);
+                //   return;
+                // }
+                const url = this.uploadByClipHandler();
+                console.log(url);
+                return url;
+              }
+            ).catch(console.error);
+          }
           evt.preventDefault();
         }
       }
@@ -442,20 +478,13 @@ export default class imageAutoUploadPlugin extends Plugin {
     return this.cmAndHandlersMap.get(cm);
   }
 
-  async uploadFileAndEmbedImgurImage(editor: Editor) {
+  async uploadFileAndEmbedImgurImage(editor: Editor, callback: Function) {
     let pasteId = (Math.random() + 1).toString(36).substr(2, 5);
     this.insertTemporaryText(editor, pasteId);
 
     try {
-      let resp = await this.uploadFileByClipboard();
-      let data: PicGoResponse = await resp.json();
-
-      if (!data.success) {
-        let err = { response: data, body: data.msg };
-        this.handleFailedUpload(editor, pasteId, err);
-        return;
-      }
-      this.embedMarkDownImage(editor, pasteId, data.result[0]);
+      const url = await callback(editor, pasteId);
+      this.embedMarkDownImage(editor, pasteId, url);
     } catch (e) {
       this.handleFailedUpload(editor, pasteId, e);
     }
@@ -546,5 +575,45 @@ export default class imageAutoUploadPlugin extends Plugin {
       value = cache.frontmatter[key];
     }
     return value;
+  }
+
+  // 重构
+  // PicGo-Core的剪切上传反馈
+  async uploadByClip() {
+    if (this.settings.picgoCorePath) {
+      let { stdout, stderr } = await exec(this.settings.picgoCorePath);
+      const res = await this.streamToString(stdout);
+      console.log("stdout:", res);
+      return res;
+    } else {
+      let { stdout, stderr } = await exec(`picgo upload`);
+      const res = await this.streamToString(stdout);
+      console.log("stdout:", res);
+      return res;
+    }
+  }
+
+  // PicGo-Core 上传处理
+  async uploadByClipHandler() {
+    const res = await this.uploadByClip();
+    const splitList = res.split("\n");
+    // console.log(res, splitList, splitList[splitList.length - 1]);
+    if (splitList[splitList.length - 2].startsWith("http")) {
+      // console.log(res, splitList[splitList.length - 2]);
+      return splitList[splitList.length - 2];
+    } else {
+      new Notice("请检查 PicGo-Core 配置");
+    }
+  }
+
+  async streamToString(stream) {
+    // lets have a ReadableStream as a stream variable
+    const chunks = [];
+
+    for await (const chunk of stream) {
+      chunks.push(Buffer.from(chunk));
+    }
+
+    return Buffer.concat(chunks).toString("utf-8");
   }
 }
