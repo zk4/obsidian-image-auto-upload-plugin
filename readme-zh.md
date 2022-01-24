@@ -1,6 +1,7 @@
 # Obsidian Image Auto Upload Plugin
 
 这是一个利用 PicGo 自动上传剪切版图片的工具
+**更新插件后记得重启一下 Obsidian**
 
 # 开始
 
