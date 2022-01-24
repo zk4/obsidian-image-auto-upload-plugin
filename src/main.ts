@@ -378,7 +378,7 @@ export default class imageAutoUploadPlugin extends Plugin {
         );
         if (allowUpload) {
           let files = evt.dataTransfer.files;
-          if (files.length !== 0 || files[0].type.startsWith("image")) {
+          if (files.length !== 0 && files[0].type.startsWith("image")) {
             let sendFiles: Array<String> = [];
             let files = evt.dataTransfer.files;
             Array.from(files).forEach((item, index) => {
