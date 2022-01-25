@@ -14,11 +14,19 @@ import {
 import { resolve, extname, relative, join, parse, posix } from "path";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { execSync, exec } from "child_process";
-// import { util } from "util";
-// const exec = util.promisify(require("child_process").exec);
+
+import {
+  isAssetTypeAnImage,
+  isAnImage,
+  streamToString,
+  getUrlAsset,
+  isCopyImageFile,
+  getLastImage,
+} from "./utils";
+import { PicGoUploader, PicGoCoreUploader } from "./uploader";
+import Helper from "./helper";
 
 import fetch from "node-fetch";
-import { clipboard } from "electron";
 
 import { SettingTab, PluginSettings, DEFAULT_SETTINGS } from "./setting";
 
@@ -30,14 +38,12 @@ interface Image {
   source: string;
 }
 
-interface PicGoResponse {
-  success: string;
-  msg: string;
-}
-
 export default class imageAutoUploadPlugin extends Plugin {
   settings: PluginSettings;
-  readonly cmAndHandlersMap = new WeakMap();
+  helper: Helper;
+  editor: Editor;
+  picGoUploader: PicGoUploader;
+  picGoCoreUploader: PicGoCoreUploader;
 
   async loadSettings() {
     this.settings = Object.assign(DEFAULT_SETTINGS, await this.loadData());
@@ -50,13 +56,20 @@ export default class imageAutoUploadPlugin extends Plugin {
   onunload() {}
 
   async onload() {
+    await this.loadSettings();
+
+    this.helper = new Helper(this.app);
+    this.editor = this.helper.getEditor();
+    this.picGoUploader = new PicGoUploader(this.settings);
+    this.picGoCoreUploader = new PicGoCoreUploader(this.settings);
+
     addIcon(
       "upload",
       `<svg t="1636630783429" class="icon" viewBox="0 0 100 100" version="1.1" p-id="4649" xmlns="http://www.w3.org/2000/svg">
       <path d="M 71.638 35.336 L 79.408 35.336 C 83.7 35.336 87.178 38.662 87.178 42.765 L 87.178 84.864 C 87.178 88.969 83.7 92.295 79.408 92.295 L 17.249 92.295 C 12.957 92.295 9.479 88.969 9.479 84.864 L 9.479 42.765 C 9.479 38.662 12.957 35.336 17.249 35.336 L 25.019 35.336 L 25.019 42.765 L 17.249 42.765 L 17.249 84.864 L 79.408 84.864 L 79.408 42.765 L 71.638 42.765 L 71.638 35.336 Z M 49.014 10.179 L 67.326 27.688 L 61.835 32.942 L 52.849 24.352 L 52.849 59.731 L 45.078 59.731 L 45.078 24.455 L 36.194 32.947 L 30.702 27.692 L 49.012 10.181 Z" p-id="4650" fill="#8a8a8a"></path>
     </svg>`
     );
-    await this.loadSettings();
+
     this.addSettingTab(new SettingTab(this.app, this));
 
     this.addCommand({
@@ -66,7 +79,11 @@ export default class imageAutoUploadPlugin extends Plugin {
         let leaf = this.app.workspace.activeLeaf;
         if (leaf) {
           if (!checking) {
-            this.uploadAllFile();
+            if (this.settings.uploader === "PicGo") {
+              this.uploadAllFile();
+            } else {
+              new Notice("目前暂不支持 PicGo 客户端以外方式");
+            }
           }
           return true;
         }
@@ -91,10 +108,11 @@ export default class imageAutoUploadPlugin extends Plugin {
     this.setupPasteHandler();
     this.registerFileMenu();
   }
+
   ///TODO: asset路径处理（assets文件夹不存在处理），下载图片失败处理
   async downloadAllImageFiles() {
     const folderPath = this.getFileAssetPath();
-    const fileArray = this.getAllFiles();
+    const fileArray = this.helper.getAllFiles();
     if (!existsSync(folderPath)) {
       mkdirSync(folderPath);
     }
@@ -106,8 +124,8 @@ export default class imageAutoUploadPlugin extends Plugin {
       }
 
       const url = file.path;
-      const asset = this.getUrlAsset(url);
-      if (!this.isAnImage(asset.substr(asset.lastIndexOf(".")))) {
+      const asset = getUrlAsset(url);
+      if (!isAnImage(asset.substr(asset.lastIndexOf(".")))) {
         continue;
       }
       let [name, ext] = [
@@ -141,13 +159,12 @@ export default class imageAutoUploadPlugin extends Plugin {
       }
     }
 
-    let editor = this.getEditor();
-    let value = editor.getValue();
+    let value = this.editor.getValue();
     imageArray.map(image => {
       value = value.replace(image.source, `![${image.name}](${image.path})`);
     });
 
-    this.setValue(value);
+    this.helper.setValue(value);
 
     new Notice(
       `all: ${fileArray.length}\nsuccess: ${imageArray.length}\nfailed: ${
@@ -202,18 +219,12 @@ export default class imageAutoUploadPlugin extends Plugin {
     }
   }
 
-  getUrlAsset(url: string) {
-    return (url = url.substr(1 + url.lastIndexOf("/")).split("?")[0]).split(
-      "#"
-    )[0];
-  }
-
   registerFileMenu() {
     this.registerEvent(
       this.app.workspace.on(
         "file-menu",
         (menu: Menu, file: TFile, source: string) => {
-          if (!this.isAssetTypeAnImage(file.path)) {
+          if (!isAssetTypeAnImage(file.path)) {
             return false;
           }
           menu.addItem((item: MenuItem) => {
@@ -230,12 +241,12 @@ export default class imageAutoUploadPlugin extends Plugin {
                 ).getBasePath();
 
                 const uri = decodeURI(resolve(basePath, file.path));
-                const editor = this.getEditor();
-                this.uploadFiles([uri]).then(res => {
+
+                this.picGoUploader.uploadFiles([uri]).then(res => {
                   if (res.success) {
                     let uploadUrl = [...res.result][0];
 
-                    let value = editor
+                    let value = this.editor
                       .getValue()
                       .replaceAll(
                         encodeURI(
@@ -246,7 +257,7 @@ export default class imageAutoUploadPlugin extends Plugin {
                         ),
                         uploadUrl
                       );
-                    this.setValue(value);
+                    this.helper.setValue(value);
                   }
                 });
               });
@@ -256,57 +267,13 @@ export default class imageAutoUploadPlugin extends Plugin {
     );
   }
 
-  setValue(value: string) {
-    const editor = this.getEditor();
-    const { left, top } = editor.getScrollInfo();
-
-    editor.setValue(value);
-    editor.scrollTo(left, top);
-  }
-  uploadFile() {}
-
-  isAnImage(ext: string) {
-    return [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".svg", ".tiff"].includes(
-      ext.toLowerCase()
-    );
-  }
-  isAssetTypeAnImage(path: string): Boolean {
-    return (
-      [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".svg", ".tiff"].indexOf(
-        extname(path).toLowerCase()
-      ) !== -1
-    );
-  }
-  // get all file urls, include local and internet
-  getAllFiles(): Image[] {
-    let editor = this.getEditor();
-    let key = editor.getValue();
-    const matches = key.matchAll(REGEX_FILE);
-
-    let fileArray: Image[] = [];
-
-    for (const match of matches) {
-      const name = match[1];
-      const path = match[2];
-      const source = match[0];
-
-      fileArray.push({
-        path: path,
-        name: name,
-        source: source,
-      });
-    }
-    return fileArray;
-  }
-
   // uploda all file
   uploadAllFile() {
-    let editor = this.getEditor();
-    if (!editor) {
+    if (!this.editor) {
       return false;
     }
 
-    let key = editor.getValue();
+    let key = this.editor.getValue();
 
     const thisPath = this.app.vault.getAbstractFileByPath(
       this.app.workspace.getActiveFile().path
@@ -316,7 +283,7 @@ export default class imageAutoUploadPlugin extends Plugin {
     ).getBasePath();
 
     let imageList: Image[] = [];
-    const fileArray = this.getAllFiles();
+    const fileArray = this.helper.getAllFiles();
 
     for (const match of fileArray) {
       const imageName = match.name;
@@ -330,7 +297,7 @@ export default class imageAutoUploadPlugin extends Plugin {
         );
         if (
           existsSync(abstractImageFile) &&
-          this.isAssetTypeAnImage(abstractImageFile)
+          isAssetTypeAnImage(abstractImageFile)
         ) {
           imageList.push({
             path: abstractImageFile,
@@ -341,17 +308,22 @@ export default class imageAutoUploadPlugin extends Plugin {
       }
     }
 
-    this.uploadFiles(imageList.map(item => item.path)).then(res => {
-      if (res.success) {
-        let uploadUrlList = [...res.result];
-        imageList.map(item => {
-          // gitea不能上传超过1M的数据，上传多张照片，错误的话会返回什么？还有待验证
-          const uploadImage = uploadUrlList.shift();
-          key = key.replaceAll(item.source, `![${item.name}](${uploadImage})`);
-        });
-        this.setValue(key);
-      }
-    });
+    this.picGoUploader
+      .uploadFiles(imageList.map(item => item.path))
+      .then(res => {
+        if (res.success) {
+          let uploadUrlList = [...res.result];
+          imageList.map(item => {
+            // gitea不能上传超过1M的数据，上传多张照片，错误的话会返回什么？还有待验证
+            const uploadImage = uploadUrlList.shift();
+            key = key.replaceAll(
+              item.source,
+              `![${item.name}](${uploadImage})`
+            );
+          });
+          this.helper.setValue(key);
+        }
+      });
   }
 
   setupPasteHandler() {
@@ -359,52 +331,38 @@ export default class imageAutoUploadPlugin extends Plugin {
       this.app.workspace.on(
         "editor-paste",
         (evt: ClipboardEvent, editor: Editor, markdownView: MarkdownView) => {
-          const allowUpload = this.getFrontmatterValue(
+          const allowUpload = this.helper.getFrontmatterValue(
             "image-auto-upload",
             this.settings.uploadByClipSwitch
           );
 
           let files = evt.clipboardData.files;
+          if (!allowUpload) {
+            return;
+          }
           if (
-            allowUpload &&
-            (this.isCopyImageFile() ||
-              files.length !== 0 ||
-              files[0].type.startsWith("image"))
+            isCopyImageFile() ||
+            files.length !== 0 ||
+            files[0].type.startsWith("image")
           ) {
-            if (this.settings.uploader === "PicGo") {
-              this.uploadFileAndEmbedImgurImage(
-                editor,
-                async (editor: Editor, pasteId: string) => {
-                  let resp = await this.uploadFileByClipboard();
-                  let data: PicGoResponse = await resp.json();
-
-                  if (!data.success) {
-                    let err = { response: data, body: data.msg };
-                    this.handleFailedUpload(editor, pasteId, err);
-                    return;
-                  }
-                  const url = data.result[0];
-                  return url;
+            this.uploadFileAndEmbedImgurImage(
+              editor,
+              async (editor: Editor, pasteId: string) => {
+                let res;
+                if (this.settings.uploader === "PicGo") {
+                  res = await this.picGoUploader.uploadFileByClipboard();
+                } else if (this.settings.uploader === "PicGo-Core") {
+                  res = await this.picGoCoreUploader.uploadByClipHandler();
                 }
-              ).catch(console.error);
-            } else if (this.settings.uploader === "PicGo-Core") {
-              this.uploadFileAndEmbedImgurImage(
-                editor,
-                async (editor: Editor, pasteId: string) => {
-                  // let resp = await this.uploadFileByClipboard();
-                  // let data: PicGoResponse = await resp.json();
 
-                  // if (!data.success) {
-                  //   let err = { response: data, body: data.msg };
-                  //   this.handleFailedUpload(editor, pasteId, err);
-                  //   return;
-                  // }
-                  const url = this.uploadByClipHandler();
-                  console.log(url);
-                  return url;
+                if (res.code !== 0) {
+                  this.handleFailedUpload(editor, pasteId, res.msg);
+                  return;
                 }
-              ).catch(console.error);
-            }
+                const url = res.data;
+                return url;
+              }
+            ).catch(console.error);
             evt.preventDefault();
           }
         }
@@ -414,75 +372,47 @@ export default class imageAutoUploadPlugin extends Plugin {
       this.app.workspace.on(
         "editor-drop",
         async (evt: DragEvent, editor: Editor, markdownView: MarkdownView) => {
-          const allowUpload = this.getFrontmatterValue(
+          const allowUpload = this.helper.getFrontmatterValue(
             "image-auto-upload",
             this.settings.uploadByClipSwitch
           );
-          if (allowUpload) {
+          let files = evt.dataTransfer.files;
+
+          if (!allowUpload) {
+            return;
+          }
+          if (
+            files.length !== 0 &&
+            files[0].type.startsWith("image") &&
+            this.settings.uploader !== "PicGo"
+          ) {
+            new Notice("目前暂不支持 PicGo 客户端以外方式");
+            return;
+          }
+
+          if (files.length !== 0 && files[0].type.startsWith("image")) {
+            let sendFiles: Array<String> = [];
             let files = evt.dataTransfer.files;
-            if (files.length !== 0 && files[0].type.startsWith("image")) {
-              let sendFiles: Array<String> = [];
-              let files = evt.dataTransfer.files;
-              Array.from(files).forEach((item, index) => {
-                sendFiles.push(item.path);
+            Array.from(files).forEach((item, index) => {
+              sendFiles.push(item.path);
+            });
+            evt.preventDefault();
+
+            const data = await this.picGoUploader.uploadFiles(sendFiles);
+
+            if (data.success) {
+              data.result.map((value: string) => {
+                let pasteId = (Math.random() + 1).toString(36).substr(2, 5);
+                this.insertTemporaryText(editor, pasteId);
+                this.embedMarkDownImage(editor, pasteId, value);
               });
-              evt.preventDefault();
-
-              const data = await this.uploadFiles(sendFiles);
-
-              if (data.success) {
-                data.result.map((value: string) => {
-                  let pasteId = (Math.random() + 1).toString(36).substr(2, 5);
-                  this.insertTemporaryText(editor, pasteId);
-                  this.embedMarkDownImage(editor, pasteId, value);
-                });
-              } else {
-                new Notice("Upload error");
-              }
+            } else {
+              new Notice("Upload error");
             }
           }
         }
       )
     );
-  }
-
-  isCopyImageFile() {
-    let filePath = "";
-    const os = this.getOS();
-
-    if (os === "Windows") {
-      var rawFilePath = clipboard.read("FileNameW");
-      filePath = rawFilePath.replace(
-        new RegExp(String.fromCharCode(0), "g"),
-        ""
-      );
-    } else if (os === "MacOS") {
-      filePath = clipboard.read("public.file-url").replace("file://", "");
-    } else {
-      filePath = "";
-    }
-    return this.isAssetTypeAnImage(filePath);
-  }
-
-  getOS() {
-    const { appVersion } = navigator;
-    if (appVersion.indexOf("Win") !== -1) {
-      return "Windows";
-    } else if (appVersion.indexOf("Mac") !== -1) {
-      return "MacOS";
-    } else if (appVersion.indexOf("X11") !== -1) {
-      return "Linux";
-    } else {
-      return "Unknown OS";
-    }
-  }
-
-  backupOriginalPasteHandler(cm: any) {
-    if (!this.cmAndHandlersMap.has(cm)) {
-      let originalHandler = cm._handlers.paste[0];
-      this.cmAndHandlersMap.set(cm, originalHandler);
-    }
-    return this.cmAndHandlersMap.get(cm);
   }
 
   async uploadFileAndEmbedImgurImage(editor: Editor, callback: Function) {
@@ -504,22 +434,6 @@ export default class imageAutoUploadPlugin extends Plugin {
 
   private static progressTextFor(id: string) {
     return `![Uploading file...${id}]()`;
-  }
-
-  async uploadFiles(fileList: Array<String>): Promise<any> {
-    const response = await fetch(this.settings.uploadServer, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ list: fileList }),
-    });
-    const data = await response.json();
-    return data;
-  }
-
-  uploadFileByClipboard(): Promise<any> {
-    return fetch(this.settings.uploadServer, {
-      method: "POST",
-    });
   }
 
   embedMarkDownImage(editor: Editor, pasteId: string, imageUrl: any) {
@@ -558,69 +472,5 @@ export default class imageAutoUploadPlugin extends Plugin {
         break;
       }
     }
-  }
-
-  getEditor() {
-    const mdView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    if (mdView) {
-      return mdView.editor;
-    } else {
-      return null;
-    }
-  }
-
-  getFrontmatterValue(key: string, defaultValue: any = undefined) {
-    const file = this.app.workspace.getActiveFile();
-    if (!file) {
-      return undefined;
-    }
-    const path = file.path;
-    const cache = this.app.metadataCache.getCache(path);
-
-    let value = defaultValue;
-    if (cache?.frontmatter && cache.frontmatter.hasOwnProperty(key)) {
-      value = cache.frontmatter[key];
-    }
-    return value;
-  }
-
-  // 重构
-  // PicGo-Core的剪切上传反馈
-  async uploadByClip() {
-    if (this.settings.picgoCorePath) {
-      let { stdout, stderr } = await exec(this.settings.picgoCorePath);
-      const res = await this.streamToString(stdout);
-      console.log("stdout:", res);
-      return res;
-    } else {
-      let { stdout, stderr } = await exec(`picgo upload`);
-      const res = await this.streamToString(stdout);
-      console.log("stdout:", res);
-      return res;
-    }
-  }
-
-  // PicGo-Core 上传处理
-  async uploadByClipHandler() {
-    const res = await this.uploadByClip();
-    const splitList = res.split("\n");
-    // console.log(res, splitList, splitList[splitList.length - 1]);
-    if (splitList[splitList.length - 2].startsWith("http")) {
-      // console.log(res, splitList[splitList.length - 2]);
-      return splitList[splitList.length - 2];
-    } else {
-      new Notice("请检查 PicGo-Core 配置");
-    }
-  }
-
-  async streamToString(stream: ReadableStream) {
-    // lets have a ReadableStream as a stream variable
-    const chunks = [];
-
-    for await (const chunk of stream) {
-      chunks.push(Buffer.from(chunk));
-    }
-
-    return Buffer.concat(chunks).toString("utf-8");
   }
 }

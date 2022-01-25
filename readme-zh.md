@@ -40,6 +40,26 @@ image-auto-upload: true
 
 ## 支持拖拽上传
 
+仅在使用 picGo 客户端时生效
+
+## 部分支持 Picgo-Core
+
+目前只支持粘贴时上传图片
+
+### 安装
+
+[官方文档：全局安装](https://picgo.github.io/PicGo-Core-Doc/zh/guide/getting-started.html#%E5%85%A8%E5%B1%80%E5%AE%89%E8%A3%85)
+
+### PicGo-Core 配置
+
+[官方文档：配置](https://picgo.github.io/PicGo-Core-Doc/zh/guide/config.html#%E9%BB%98%E8%AE%A4%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
+
+### 插件配置
+
+`Default uploader` 选择 `PicGo-Core`
+设置路径，默认为空，使用环境变量
+也可以设置自定义路径
+
 # TODO
 
 - [x] 支持批量上传
