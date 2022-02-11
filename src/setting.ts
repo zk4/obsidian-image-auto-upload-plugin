@@ -10,7 +10,7 @@ export interface PluginSettings {
 
 export const DEFAULT_SETTINGS: PluginSettings = {
   uploadByClipSwitch: true,
-  uploader: "PicGO",
+  uploader: "PicGo",
   uploadServer: "http://127.0.0.1:36677/upload",
   picgoCorePath: "",
 };
