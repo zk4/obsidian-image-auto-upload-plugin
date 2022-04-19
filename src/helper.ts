@@ -48,6 +48,10 @@ export default class Helper {
       return null;
     }
   }
+  getValue() {
+    const editor = this.getEditor();
+    return editor.getValue();
+  }
 
   setValue(value: string) {
     const editor = this.getEditor();

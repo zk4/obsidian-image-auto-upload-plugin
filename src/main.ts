@@ -59,7 +59,6 @@ export default class imageAutoUploadPlugin extends Plugin {
     await this.loadSettings();
 
     this.helper = new Helper(this.app);
-    this.editor = this.helper.getEditor();
     this.picGoUploader = new PicGoUploader(this.settings);
     this.picGoCoreUploader = new PicGoCoreUploader(this.settings);
 
@@ -159,7 +158,7 @@ export default class imageAutoUploadPlugin extends Plugin {
       }
     }
 
-    let value = this.editor.getValue();
+    let value = this.helper.getValue();
     imageArray.map(image => {
       value = value.replace(image.source, `![${image.name}](${image.path})`);
     });
@@ -246,7 +245,7 @@ export default class imageAutoUploadPlugin extends Plugin {
                   if (res.success) {
                     let uploadUrl = [...res.result][0];
 
-                    let value = this.editor
+                    let value = this.helper
                       .getValue()
                       .replaceAll(
                         encodeURI(
@@ -269,11 +268,7 @@ export default class imageAutoUploadPlugin extends Plugin {
 
   // uploda all file
   uploadAllFile() {
-    if (!this.editor) {
-      return false;
-    }
-
-    let key = this.editor.getValue();
+    let key = this.helper.getValue();
 
     const thisPath = this.app.vault.getAbstractFileByPath(
       this.app.workspace.getActiveFile().path
