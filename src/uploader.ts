@@ -121,10 +121,10 @@ export class PicGoCoreUploader {
         data: lastImage,
       };
     } else {
-      new Notice(res);
+      new Notice(`"Please check PicGo-Core config"\n${res}`);
       return {
         code: -1,
-        msg: res,
+        msg: `"Please check PicGo-Core config"\n${res}`,
         data: "",
       };
     }
