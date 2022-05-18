@@ -36,7 +36,7 @@ image-auto-upload: true
 
 press `ctrl+P` and input `upload all images`，enter, then will auto upload all local images
 
-## download all internet to loacl
+## download all internet to local
 
 press `ctrl+P` and input `download all images`，enter, then will auto download all internet images to loacl.only test in win10
 
