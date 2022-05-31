@@ -13,7 +13,6 @@ import {
 
 import { resolve, extname, relative, join, parse, posix } from "path";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
-import { execSync, exec } from "child_process";
 
 import {
   isAssetTypeAnImage,
@@ -285,12 +284,19 @@ export default class imageAutoUploadPlugin extends Plugin {
       const imageName = match.name;
       const encodedUri = match.path;
       if (!encodedUri.startsWith("http")) {
-        const abstractImageFile = decodeURI(
-          join(
-            basePath,
-            posix.resolve(posix.join("/", thisPath.parent.path), encodedUri)
-          )
-        );
+        let abstractImageFile;
+        // 当路径以“.”开头时，识别为相对路径，不然就认为时绝对路径
+        if (encodedUri.startsWith(".")) {
+          abstractImageFile = decodeURI(
+            join(
+              basePath,
+              posix.resolve(posix.join("/", thisPath.parent.path), encodedUri)
+            )
+          );
+        } else {
+          abstractImageFile = decodeURI(join(basePath, encodedUri));
+        }
+
         if (
           existsSync(abstractImageFile) &&
           isAssetTypeAnImage(abstractImageFile)
@@ -303,6 +309,13 @@ export default class imageAutoUploadPlugin extends Plugin {
         }
       }
     }
+    if (imageList.length === 0) {
+      new Notice("没有解析到图像文件");
+      return;
+    } else {
+      new Notice(`共找到${imageList.length}个图像文件，开始上传`);
+    }
+    console.log(imageList);
 
     this.picGoUploader
       .uploadFiles(imageList.map(item => item.path))

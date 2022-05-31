@@ -32,11 +32,23 @@ image-auto-upload: true
 
 输入 `ctrl+P` 呼出面板，输入 `upload all images`，点击回车，就会自动开始上传。
 
+目前支持的路径：
+
+1. md 标准语法
+2. wiki 语法
+
+目前支持的内部链接类型：
+
+1. 基于当前笔记的相对路径
+2. 基于库的绝对路径
+
 ## 批量下载网络图片到本地
 
-输入 `ctrl+P` 呼出面板，输入 `download all images`，点击回车，就会自动开始下载。只在 win 进行测试
+输入 `ctrl+P` 呼出面板，输入 `download all images`，点击回车，就会自动开始下载。只在 win 进行过测试
 
 ## 支持右键菜单上传图片
+
+只支持使用标准 md 语法下的基于当前笔记的相对路径。
 
 ## 支持拖拽上传
 
@@ -64,5 +76,5 @@ image-auto-upload: true
 
 - [x] 支持批量上传
 - [x] 支持 yaml 设置是否开启已达到单个文档的控制
-- [ ] 支持 picgo-core
+- [x] 支持 picgo-core
 - [x] 支持复制系统图片文件
