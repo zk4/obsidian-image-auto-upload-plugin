@@ -295,6 +295,16 @@ export default class imageAutoUploadPlugin extends Plugin {
           );
         } else {
           abstractImageFile = decodeURI(join(basePath, encodedUri));
+
+          // 当解析为绝对路径却找不到文件，尝试解析为相对路径
+          if (!existsSync(abstractImageFile)) {
+            abstractImageFile = decodeURI(
+              join(
+                basePath,
+                posix.resolve(posix.join("/", thisPath.parent.path), encodedUri)
+              )
+            );
+          }
         }
 
         if (
