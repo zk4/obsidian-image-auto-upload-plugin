@@ -9,6 +9,7 @@ import {
   normalizePath,
   Notice,
   addIcon,
+  requestUrl,
 } from "obsidian";
 
 import { resolve, extname, relative, join, parse, posix } from "path";
@@ -107,7 +108,6 @@ export default class imageAutoUploadPlugin extends Plugin {
     this.registerFileMenu();
   }
 
-  ///TODO: asset路径处理（assets文件夹不存在处理），下载图片失败处理
   async downloadAllImageFiles() {
     const folderPath = this.getFileAssetPath();
     const fileArray = this.helper.getAllFiles();
@@ -160,7 +160,10 @@ export default class imageAutoUploadPlugin extends Plugin {
 
     let value = this.helper.getValue();
     imageArray.map(image => {
-      value = value.replace(image.source, `![${image.name}](${image.path})`);
+      value = value.replace(
+        image.source,
+        `![${image.name}](${encodeURI(image.path)})`
+      );
     });
 
     this.helper.setValue(value);
@@ -195,14 +198,16 @@ export default class imageAutoUploadPlugin extends Plugin {
   }
 
   async download(url: string, path: string) {
-    const response = await fetch(url);
+    const response = await requestUrl({ url });
+
     if (response.status !== 200) {
       return {
         ok: false,
-        msg: response.statusText,
+        msg: "error",
       };
     }
-    const buffer = await response.buffer();
+    const buffer = Buffer.from(response.arrayBuffer);
+
     try {
       writeFileSync(path, buffer);
       return {
@@ -211,6 +216,8 @@ export default class imageAutoUploadPlugin extends Plugin {
         path: path,
       };
     } catch (err) {
+      console.error(err);
+
       return {
         ok: false,
         msg: err,
