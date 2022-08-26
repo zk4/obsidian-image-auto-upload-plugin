@@ -390,10 +390,36 @@ export default class imageAutoUploadPlugin extends Plugin {
           if (!allowUpload) {
             return;
           }
+          // 剪贴板内容有md格式的图片时
+          if (this.settings.workOnNetWork) {
+            const clipboardValue = evt.clipboardData.getData("text/plain");
+            const imageList = this.helper.getImageLink(clipboardValue);
+
+            if (imageList.length !== 0) {
+              this.uploader
+                .uploadFiles(imageList.map(item => item.path))
+                .then(res => {
+                  let value = this.helper.getValue();
+                  if (res.success) {
+                    let uploadUrlList = res.result;
+                    imageList.map(item => {
+                      const uploadImage = uploadUrlList.shift();
+                      value = value.replaceAll(
+                        item.source,
+                        `![${item.name}](${uploadImage})`
+                      );
+                    });
+                    this.helper.setValue(value);
+                  }
+                });
+            }
+          }
+
+          // 剪贴板中是图片时进行上传
           if (
             isCopyImageFile() ||
             files.length !== 0 ||
-            files[0].type.startsWith("image")
+            files[0]?.type.startsWith("image")
           ) {
             this.uploadFileAndEmbedImgurImage(
               editor,

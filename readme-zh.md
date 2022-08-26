@@ -82,4 +82,4 @@ image-auto-upload: true
 - [x] 支持 yaml 设置是否开启已达到单个文档的控制
 - [x] 支持 picgo-core
 - [x] 支持复制系统图片文件
-- [ ] 网络图片支持
+- [x] 网络图片支持

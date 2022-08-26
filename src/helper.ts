@@ -69,6 +69,9 @@ export default class Helper {
   getAllFiles(): Image[] {
     const editor = this.getEditor();
     let value = editor.getValue();
+    return this.getImageLink(value);
+  }
+  getImageLink(value: string): Image[] {
     const matches = value.matchAll(REGEX_FILE);
     const WikiMatches = value.matchAll(REGEX_WIKI_FILE);
 

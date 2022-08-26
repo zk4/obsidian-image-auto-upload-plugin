@@ -57,7 +57,7 @@ You can install picgo-core with npm. Reference to [doc](https://picgo.github.io/
 - [x] support yaml to config if upload image
 - [x] support picgo-core
 - [x] support upload image from system copy selected image
-- [ ] support network image
+- [x] support network image
 
 # Thanks
 

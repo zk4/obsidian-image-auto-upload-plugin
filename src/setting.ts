@@ -7,6 +7,7 @@ export interface PluginSettings {
   uploader: string;
   picgoCorePath: string;
   menuMode: string;
+  workOnNetWork: boolean;
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -15,6 +16,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   uploadServer: "http://127.0.0.1:36677/upload",
   picgoCorePath: "",
   menuMode: "auto",
+  workOnNetWork: false,
 };
 
 export class SettingTab extends PluginSettingTab {
@@ -45,6 +47,21 @@ export class SettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
+      .setName("Default uploader")
+      .setDesc("Default uploader")
+      .addDropdown(cb =>
+        cb
+          .addOption("PicGo", "PicGo(app)")
+          .addOption("PicGo-Core", "PicGo-Core")
+          .setValue(this.plugin.settings.uploader)
+          .onChange(async value => {
+            this.plugin.settings.uploader = value;
+            this.display();
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
       .setName("Upload contextMenu mode")
       .setDesc(
         "It should be set like your ob setting, otherwise the feature can not be work."
@@ -63,15 +80,15 @@ export class SettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Default uploader")
-      .setDesc("Default uploader")
-      .addDropdown(cb =>
-        cb
-          .addOption("PicGo", "PicGo(app)")
-          .addOption("PicGo-Core", "PicGo-Core")
-          .setValue(this.plugin.settings.uploader)
+      .setName("Work on network")
+      .setDesc(
+        "When you paste, md standard image link in your clipboard will be auto upload."
+      )
+      .addToggle(toggle =>
+        toggle
+          .setValue(this.plugin.settings.workOnNetWork)
           .onChange(async value => {
-            this.plugin.settings.uploader = value;
+            this.plugin.settings.workOnNetWork = value;
             this.display();
             await this.plugin.saveSettings();
           })
