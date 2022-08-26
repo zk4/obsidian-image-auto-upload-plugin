@@ -1,27 +1,7 @@
-import fetch from "node-fetch";
-import { clipboard } from "electron";
-import { SettingTab, PluginSettings, DEFAULT_SETTINGS } from "./setting";
-import {
-  isAssetTypeAnImage,
-  isAnImage,
-  streamToString,
-  getUrlAsset,
-  isCopyImageFile,
-  getLastImage,
-} from "./utils";
-import { execSync, exec } from "child_process";
-import {
-  MarkdownView,
-  Plugin,
-  FileSystemAdapter,
-  Editor,
-  Menu,
-  MenuItem,
-  TFile,
-  normalizePath,
-  Notice,
-  addIcon,
-} from "obsidian";
+import { PluginSettings } from "./setting";
+import { streamToString, getLastImage } from "./utils";
+import { exec } from "child_process";
+import { Notice, requestUrl } from "obsidian";
 
 interface PicGoResponse {
   success: string;
@@ -37,22 +17,26 @@ export class PicGoUploader {
   }
 
   async uploadFiles(fileList: Array<String>): Promise<any> {
-    const response = await fetch(this.settings.uploadServer, {
+    const response = await requestUrl({
+      url: this.settings.uploadServer,
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ list: fileList }),
     });
-    const data = await response.json();
+
+    const data = response.json;
     return data;
   }
 
   async uploadFileByClipboard(): Promise<any> {
-    const res = await fetch(this.settings.uploadServer, {
+    const res = await requestUrl({
+      url: this.settings.uploadServer,
       method: "POST",
     });
-    let data: PicGoResponse = await res.json();
 
-    if (!data.success) {
+    let data: PicGoResponse = res.json;
+
+    if (res.status !== 200) {
       let err = { response: data, body: data.msg };
       return {
         code: -1,
@@ -77,39 +61,18 @@ export class PicGoCoreUploader {
   }
 
   async uploadFiles(fileList: Array<String>): Promise<any> {
-    const response = await fetch(this.settings.uploadServer, {
+    const response = await requestUrl({
+      url: this.settings.uploadServer,
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ list: fileList }),
     });
-    const data = await response.json();
+    const data = response.json;
     return data;
   }
 
-  async uploadFileByClipboard(): Promise<any> {
-    const res = await fetch(this.settings.uploadServer, {
-      method: "POST",
-    });
-    let data: PicGoResponse = await res.json();
-
-    if (!data.success) {
-      let err = { response: data, body: data.msg };
-      return {
-        code: -1,
-        msg: data.msg,
-        data: "",
-      };
-    } else {
-      return {
-        code: 0,
-        msg: "success",
-        data: data.result[0],
-      };
-    }
-  }
-
   // PicGo-Core 上传处理
-  async uploadByClipHandler() {
+  async uploadFileByClipboard() {
     const res = await this.uploadByClip();
     const splitList = res.split("\n");
     const lastImage = getLastImage(splitList);

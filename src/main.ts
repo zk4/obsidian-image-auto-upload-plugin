@@ -26,8 +26,6 @@ import {
 import { PicGoUploader, PicGoCoreUploader } from "./uploader";
 import Helper from "./helper";
 
-import fetch from "node-fetch";
-
 import { SettingTab, PluginSettings, DEFAULT_SETTINGS } from "./setting";
 
 const REGEX_FILE = /\!\[(.*?)\]\((.*?)\)/g;
@@ -44,6 +42,7 @@ export default class imageAutoUploadPlugin extends Plugin {
   editor: Editor;
   picGoUploader: PicGoUploader;
   picGoCoreUploader: PicGoCoreUploader;
+  uploader: PicGoUploader | PicGoCoreUploader;
 
   async loadSettings() {
     this.settings = Object.assign(DEFAULT_SETTINGS, await this.loadData());
@@ -61,6 +60,14 @@ export default class imageAutoUploadPlugin extends Plugin {
     this.helper = new Helper(this.app);
     this.picGoUploader = new PicGoUploader(this.settings);
     this.picGoCoreUploader = new PicGoCoreUploader(this.settings);
+
+    if (this.settings.uploader === "PicGo") {
+      this.uploader = this.picGoUploader;
+    } else if (this.settings.uploader === "PicGo-Core") {
+      this.uploader = this.picGoCoreUploader;
+    } else {
+      new Notice("unknown uploader");
+    }
 
     addIcon(
       "upload",
@@ -247,18 +254,8 @@ export default class imageAutoUploadPlugin extends Plugin {
                 ).getBasePath();
 
                 const uri = decodeURI(resolve(basePath, file.path));
-                const sourceUri = encodeURI(
-                  relative(
-                    this.app.workspace.getActiveFile().parent.path,
-                    file.path
-                  ).replaceAll("\\", "/")
-                );
-                console.log(
-                  file,
-                  sourceUri,
-                  this.app.workspace.getActiveFile().parent.path,
-                  file.path
-                );
+
+                console.log(this.uploader);
 
                 this.picGoUploader.uploadFiles([uri]).then(res => {
                   if (res.success) {
@@ -414,12 +411,7 @@ export default class imageAutoUploadPlugin extends Plugin {
             this.uploadFileAndEmbedImgurImage(
               editor,
               async (editor: Editor, pasteId: string) => {
-                let res;
-                if (this.settings.uploader === "PicGo") {
-                  res = await this.picGoUploader.uploadFileByClipboard();
-                } else if (this.settings.uploader === "PicGo-Core") {
-                  res = await this.picGoCoreUploader.uploadByClipHandler();
-                }
+                let res = await this.uploader.uploadFileByClipboard();
 
                 if (res.code !== 0) {
                   this.handleFailedUpload(editor, pasteId, res.msg);
