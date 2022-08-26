@@ -81,11 +81,7 @@ export default class imageAutoUploadPlugin extends Plugin {
         let leaf = this.app.workspace.activeLeaf;
         if (leaf) {
           if (!checking) {
-            if (this.settings.uploader === "PicGo") {
-              this.uploadAllFile();
-            } else {
-              new Notice("目前暂不支持 PicGo 客户端以外方式");
-            }
+            this.uploadAllFile();
           }
           return true;
         }
