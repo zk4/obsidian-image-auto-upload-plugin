@@ -240,22 +240,62 @@ export default class imageAutoUploadPlugin extends Plugin {
                 ).getBasePath();
 
                 const uri = decodeURI(resolve(basePath, file.path));
+                const sourceUri = encodeURI(
+                  relative(
+                    this.app.workspace.getActiveFile().parent.path,
+                    file.path
+                  ).replaceAll("\\", "/")
+                );
+                console.log(
+                  file,
+                  sourceUri,
+                  this.app.workspace.getActiveFile().parent.path,
+                  file.path
+                );
 
                 this.picGoUploader.uploadFiles([uri]).then(res => {
                   if (res.success) {
+                    // @ts-ignore
                     let uploadUrl = [...res.result][0];
+                    const sourceUri = encodeURI(
+                      relative(
+                        this.app.workspace.getActiveFile().parent.path,
+                        file.path
+                      ).replaceAll("\\", "/")
+                    );
 
-                    let value = this.helper
-                      .getValue()
-                      .replaceAll(
-                        encodeURI(
-                          relative(
-                            this.app.workspace.getActiveFile().parent.path,
-                            file.path
-                          ).replaceAll("\\", "/")
-                        ),
+                    let value = this.helper.getValue();
+                    let menuMode = this.settings.menuMode;
+                    if (menuMode === "auto") {
+                      // @ts-ignore
+                      menuMode = this.app.vault.config.newLinkFormat;
+                    }
+
+                    if (menuMode === "relative") {
+                      // 替换相对路径的 ![]()格式
+                      value = value.replaceAll(sourceUri, uploadUrl);
+
+                      // 替换相对路径的 ![[]]格式
+                      value = value.replaceAll(
+                        `![[${decodeURI(sourceUri)}]]`,
+                        `![](${uploadUrl})`
+                      );
+                    } else if (menuMode === "absolute") {
+                      // 替换绝对路径的 ![[]]格式
+                      value = value.replaceAll(
+                        `![[${file.path}]]`,
+                        `![](${uploadUrl})`
+                      );
+
+                      // 替换绝对路径的 ![]()格式
+                      value = value.replaceAll(
+                        file.path.replaceAll(" ", "%20"),
                         uploadUrl
                       );
+                    } else {
+                      new Notice(`Not support ${menuMode} mode`);
+                    }
+
                     this.helper.setValue(value);
                   }
                 });

@@ -6,6 +6,7 @@ export interface PluginSettings {
   uploadServer: string;
   uploader: string;
   picgoCorePath: string;
+  menuMode: string;
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -13,6 +14,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   uploader: "PicGo",
   uploadServer: "http://127.0.0.1:36677/upload",
   picgoCorePath: "",
+  menuMode: "auto",
 };
 
 export class SettingTab extends PluginSettingTab {
@@ -29,7 +31,7 @@ export class SettingTab extends PluginSettingTab {
     containerEl.empty();
     containerEl.createEl("h2", { text: "plugin settings" });
     new Setting(containerEl)
-      .setName("pasted auto upload Switch")
+      .setName("Auto pasted upload")
       .setDesc(
         "if you set this value true, when you paste image, it will be auto uploaded(you should set the picGo server rightly)"
       )
@@ -38,6 +40,24 @@ export class SettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.uploadByClipSwitch)
           .onChange(async value => {
             this.plugin.settings.uploadByClipSwitch = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("Upload contextMenu mode")
+      .setDesc(
+        "It should be set like your ob setting, otherwise the feature can not be work."
+      )
+      .addDropdown(cb =>
+        cb
+          .addOption("auto", "auto(Read from config)")
+          .addOption("absolute", "absolute")
+          .addOption("relative", "relative")
+          .setValue(this.plugin.settings.menuMode)
+          .onChange(async value => {
+            this.plugin.settings.menuMode = value;
+            this.display();
             await this.plugin.saveSettings();
           })
       );
