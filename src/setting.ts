@@ -61,6 +61,38 @@ export class SettingTab extends PluginSettingTab {
           })
       );
 
+    if (this.plugin.settings.uploader === "PicGo") {
+      new Setting(containerEl)
+        .setName("PicGo server")
+        .setDesc("PicGo server")
+        .addText(text =>
+          text
+            .setPlaceholder("Please input PicGo server")
+            .setValue(this.plugin.settings.uploadServer)
+            .onChange(async key => {
+              this.plugin.settings.uploadServer = key;
+              await this.plugin.saveSettings();
+            })
+        );
+    }
+
+    if (this.plugin.settings.uploader === "PicGo-Core") {
+      new Setting(containerEl)
+        .setName("PicGo-Core path")
+        .setDesc(
+          "Please input PicGo-Core path, default using environment variables"
+        )
+        .addText(text =>
+          text
+            .setPlaceholder("")
+            .setValue(this.plugin.settings.picgoCorePath)
+            .onChange(async value => {
+              this.plugin.settings.picgoCorePath = value;
+              await this.plugin.saveSettings();
+            })
+        );
+    }
+
     new Setting(containerEl)
       .setName("Upload contextMenu mode")
       .setDesc(
@@ -93,37 +125,5 @@ export class SettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
-
-    if (this.plugin.settings.uploader === "PicGo") {
-      new Setting(containerEl)
-        .setName("PicGo server")
-        .setDesc("PicGo server")
-        .addText(text =>
-          text
-            .setPlaceholder("Please input PicGo server")
-            .setValue(this.plugin.settings.uploadServer)
-            .onChange(async key => {
-              this.plugin.settings.uploadServer = key;
-              await this.plugin.saveSettings();
-            })
-        );
-    }
-
-    if (this.plugin.settings.uploader === "PicGo-Core") {
-      new Setting(containerEl)
-        .setName("PicGo-Core path")
-        .setDesc(
-          "Please input PicGo-Core path, default using environment variables"
-        )
-        .addText(text =>
-          text
-            .setPlaceholder("")
-            .setValue(this.plugin.settings.picgoCorePath)
-            .onChange(async value => {
-              this.plugin.settings.picgoCorePath = value;
-              await this.plugin.saveSettings();
-            })
-        );
-    }
   }
 }
