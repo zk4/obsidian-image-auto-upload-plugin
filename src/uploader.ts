@@ -61,14 +61,38 @@ export class PicGoCoreUploader {
   }
 
   async uploadFiles(fileList: Array<String>): Promise<any> {
-    const response = await requestUrl({
-      url: this.settings.uploadServer,
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ list: fileList }),
-    });
-    const data = response.json;
-    return data;
+    const length = fileList.length;
+    let cli = this.settings.picgoCorePath || "picgo";
+    let command = `${cli} upload ${fileList
+      .map(item => `"${item}"`)
+      .join(" ")}`;
+
+    const res = await this.exec(command);
+    const splitList = res.split("\n");
+    const splitListLength = splitList.length;
+    console.log(splitListLength);
+
+    const data = splitList.splice(splitListLength - 1 - length, length);
+    console.log(
+      data,
+      splitList,
+      fileList,
+      splitListLength - 1 - length,
+      splitListLength - 2
+    );
+
+    if (data.length !== length) {
+      return {
+        success: false,
+        msg: "失败",
+      };
+    } else {
+      return {
+        success: true,
+        result: data,
+      };
+    }
+    // {success:true,result:[]}
   }
 
   // PicGo-Core 上传处理
@@ -102,7 +126,6 @@ export class PicGoCoreUploader {
       command = `picgo upload`;
     }
     const res = await this.exec(command);
-    console.log("stdout:", res);
     return res;
   }
   async exec(command: string) {

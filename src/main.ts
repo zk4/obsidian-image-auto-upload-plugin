@@ -12,23 +12,19 @@ import {
   requestUrl,
 } from "obsidian";
 
-import { resolve, extname, relative, join, parse, posix } from "path";
+import { resolve, relative, join, parse, posix } from "path";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 
 import {
   isAssetTypeAnImage,
   isAnImage,
-  streamToString,
   getUrlAsset,
   isCopyImageFile,
-  getLastImage,
 } from "./utils";
 import { PicGoUploader, PicGoCoreUploader } from "./uploader";
 import Helper from "./helper";
 
 import { SettingTab, PluginSettings, DEFAULT_SETTINGS } from "./setting";
-
-const REGEX_FILE = /\!\[(.*?)\]\((.*?)\)/g;
 
 interface Image {
   path: string;
@@ -255,12 +251,10 @@ export default class imageAutoUploadPlugin extends Plugin {
 
                 const uri = decodeURI(resolve(basePath, file.path));
 
-                console.log(this.uploader);
-
-                this.picGoUploader.uploadFiles([uri]).then(res => {
+                this.uploader.uploadFiles([uri]).then(res => {
                   if (res.success) {
                     // @ts-ignore
-                    let uploadUrl = [...res.result][0];
+                    let uploadUrl = res.result[0];
                     const sourceUri = encodeURI(
                       relative(
                         this.app.workspace.getActiveFile().parent.path,
@@ -301,6 +295,8 @@ export default class imageAutoUploadPlugin extends Plugin {
                     }
 
                     this.helper.setValue(value);
+                  } else {
+                    new Notice(res.msg || "upload faliure");
                   }
                 });
               });
@@ -371,22 +367,17 @@ export default class imageAutoUploadPlugin extends Plugin {
     }
     console.log(imageList);
 
-    this.picGoUploader
-      .uploadFiles(imageList.map(item => item.path))
-      .then(res => {
-        if (res.success) {
-          let uploadUrlList = [...res.result];
-          imageList.map(item => {
-            // gitea不能上传超过1M的数据，上传多张照片，错误的话会返回什么？还有待验证
-            const uploadImage = uploadUrlList.shift();
-            key = key.replaceAll(
-              item.source,
-              `![${item.name}](${uploadImage})`
-            );
-          });
-          this.helper.setValue(key);
-        }
-      });
+    this.uploader.uploadFiles(imageList.map(item => item.path)).then(res => {
+      if (res.success) {
+        let uploadUrlList = res.result;
+        imageList.map(item => {
+          // gitea不能上传超过1M的数据，上传多张照片，错误的话会返回什么？还有待验证
+          const uploadImage = uploadUrlList.shift();
+          key = key.replaceAll(item.source, `![${item.name}](${uploadImage})`);
+        });
+        this.helper.setValue(key);
+      }
+    });
   }
 
   setupPasteHandler() {
@@ -439,14 +430,6 @@ export default class imageAutoUploadPlugin extends Plugin {
           if (!allowUpload) {
             return;
           }
-          if (
-            files.length !== 0 &&
-            files[0].type.startsWith("image") &&
-            this.settings.uploader !== "PicGo"
-          ) {
-            new Notice("目前暂不支持 PicGo 客户端以外方式");
-            return;
-          }
 
           if (files.length !== 0 && files[0].type.startsWith("image")) {
             let sendFiles: Array<String> = [];
@@ -456,7 +439,7 @@ export default class imageAutoUploadPlugin extends Plugin {
             });
             evt.preventDefault();
 
-            const data = await this.picGoUploader.uploadFiles(sendFiles);
+            const data = await this.uploader.uploadFiles(sendFiles);
 
             if (data.success) {
               data.result.map((value: string) => {

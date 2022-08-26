@@ -2,7 +2,7 @@
 
 # Obsidian Image Auto Upload Plugin
 
-This plugin can help you to auto upload image by [picgo](https://github.com/Molunerfinn/PicGo).
+This plugin can help you to auto upload image by [picgo](https://github.com/Molunerfinn/PicGo) or [PicGo-Core](https://picgo.github.io/PicGo-Core-Doc/).
 
 **You should restart obsidian after updating the plugin.**
 
@@ -43,15 +43,21 @@ press `ctrl+P` and input `download all images`，enter, then will auto download 
 ## Upload image by contextMenu
 
 Now you can upload image by contextMenu in edit mode.
+Now support standard md link, wiki link and absolute,relative.
 
 ## Support drag-and-drop
+
+## Support picgo-core
+
+You can install picgo-core with npm. Reference to [doc](https://picgo.github.io/PicGo-Core-Doc/)
 
 # TODO
 
 - [x] upload all local images file by command
 - [x] support yaml to config if upload image
-- [ ] support picgo-core
+- [x] support picgo-core
 - [x] support upload image from system copy selected image
+- [ ] support network image
 
 # Thanks
 
