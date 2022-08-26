@@ -292,7 +292,7 @@ export default class imageAutoUploadPlugin extends Plugin {
 
                     this.helper.setValue(value);
                   } else {
-                    new Notice(res.msg || "upload faliure");
+                    new Notice(res.msg || "Upload error");
                   }
                 });
               });
@@ -372,6 +372,8 @@ export default class imageAutoUploadPlugin extends Plugin {
           key = key.replaceAll(item.source, `![${item.name}](${uploadImage})`);
         });
         this.helper.setValue(key);
+      } else {
+        new Notice("Upload error");
       }
     });
   }
@@ -393,7 +395,9 @@ export default class imageAutoUploadPlugin extends Plugin {
           // 剪贴板内容有md格式的图片时
           if (this.settings.workOnNetWork) {
             const clipboardValue = evt.clipboardData.getData("text/plain");
-            const imageList = this.helper.getImageLink(clipboardValue);
+            const imageList = this.helper
+              .getImageLink(clipboardValue)
+              .filter(image => image.path.startsWith("http"));
 
             if (imageList.length !== 0) {
               this.uploader
@@ -410,6 +414,8 @@ export default class imageAutoUploadPlugin extends Plugin {
                       );
                     });
                     this.helper.setValue(value);
+                  } else {
+                    new Notice("Upload error");
                   }
                 });
             }

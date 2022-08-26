@@ -73,15 +73,8 @@ export class PicGoCoreUploader {
     console.log(splitListLength);
 
     const data = splitList.splice(splitListLength - 1 - length, length);
-    console.log(
-      data,
-      splitList,
-      fileList,
-      splitListLength - 1 - length,
-      splitListLength - 2
-    );
 
-    if (data.length !== length) {
+    if (res.includes("PicGo ERROR")) {
       return {
         success: false,
         msg: "失败",
