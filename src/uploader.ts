@@ -47,7 +47,7 @@ export class PicGoUploader {
       return {
         code: 0,
         msg: "success",
-        data: data.result[0],
+        data: typeof data.result == "string" ? data.result : data.result[0],
       };
     }
   }
@@ -121,6 +121,7 @@ export class PicGoCoreUploader {
     const res = await this.exec(command);
     return res;
   }
+
   async exec(command: string) {
     let { stdout } = await exec(command);
     const res = await streamToString(stdout);
