@@ -75,8 +75,8 @@ export default class imageAutoUploadPlugin extends Plugin {
     this.addSettingTab(new SettingTab(this.app, this));
 
     this.addCommand({
-      id: "upload all images",
-      name: "upload all images",
+      id: "Upload all images",
+      name: "Upload all images",
       checkCallback: (checking: boolean) => {
         let leaf = this.app.workspace.activeLeaf;
         if (leaf) {
@@ -89,8 +89,8 @@ export default class imageAutoUploadPlugin extends Plugin {
       },
     });
     this.addCommand({
-      id: "doanload all images",
-      name: "download all images",
+      id: "Download all images",
+      name: "Download all images",
       checkCallback: (checking: boolean) => {
         let leaf = this.app.workspace.activeLeaf;
         if (leaf) {

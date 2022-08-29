@@ -1,5 +1,6 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import imageAutoUploadPlugin from "./main";
+import { t } from "./lang/helpers";
 
 export interface PluginSettings {
   uploadByClipSwitch: boolean;
@@ -31,11 +32,13 @@ export class SettingTab extends PluginSettingTab {
     let { containerEl } = this;
 
     containerEl.empty();
-    containerEl.createEl("h2", { text: "plugin settings" });
+    containerEl.createEl("h2", { text: t("Plugin Settings") });
     new Setting(containerEl)
-      .setName("Auto pasted upload")
+      .setName(t("Auto pasted upload"))
       .setDesc(
-        "if you set this value true, when you paste image, it will be auto uploaded(you should set the picGo server rightly)"
+        t(
+          "If you set this value true, when you paste image, it will be auto uploaded(you should set the picGo server rightly)"
+        )
       )
       .addToggle(toggle =>
         toggle
@@ -47,8 +50,8 @@ export class SettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Default uploader")
-      .setDesc("Default uploader")
+      .setName(t("Default uploader"))
+      .setDesc(t("Default uploader"))
       .addDropdown(cb =>
         cb
           .addOption("PicGo", "PicGo(app)")
@@ -63,11 +66,11 @@ export class SettingTab extends PluginSettingTab {
 
     if (this.plugin.settings.uploader === "PicGo") {
       new Setting(containerEl)
-        .setName("PicGo server")
-        .setDesc("PicGo server")
+        .setName(t("PicGo server"))
+        .setDesc(t("PicGo server"))
         .addText(text =>
           text
-            .setPlaceholder("Please input PicGo server")
+            .setPlaceholder(t("Please input PicGo server"))
             .setValue(this.plugin.settings.uploadServer)
             .onChange(async key => {
               this.plugin.settings.uploadServer = key;
@@ -78,9 +81,9 @@ export class SettingTab extends PluginSettingTab {
 
     if (this.plugin.settings.uploader === "PicGo-Core") {
       new Setting(containerEl)
-        .setName("PicGo-Core path")
+        .setName(t("PicGo-Core path"))
         .setDesc(
-          "Please input PicGo-Core path, default using environment variables"
+          t("Please input PicGo-Core path, default using environment variables")
         )
         .addText(text =>
           text
@@ -94,15 +97,17 @@ export class SettingTab extends PluginSettingTab {
     }
 
     new Setting(containerEl)
-      .setName("Upload contextMenu mode")
+      .setName(t("Upload contextMenu mode"))
       .setDesc(
-        "It should be set like your ob setting, otherwise the feature can not be work."
+        t(
+          "It should be set like your ob setting, otherwise the feature can not be work."
+        )
       )
       .addDropdown(cb =>
         cb
-          .addOption("auto", "auto(Read from config)")
-          .addOption("absolute", "absolute")
-          .addOption("relative", "relative")
+          .addOption("auto", "auto")
+          .addOption("absolute", t("absolute"))
+          .addOption("relative", t("relative"))
           .setValue(this.plugin.settings.menuMode)
           .onChange(async value => {
             this.plugin.settings.menuMode = value;
@@ -112,9 +117,11 @@ export class SettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Work on network")
+      .setName(t("Work on network"))
       .setDesc(
-        "When you paste, md standard image link in your clipboard will be auto upload."
+        t(
+          "When you paste, md standard image link in your clipboard will be auto upload."
+        )
       )
       .addToggle(toggle =>
         toggle

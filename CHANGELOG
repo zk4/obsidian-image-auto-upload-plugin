@@ -53,3 +53,7 @@ picgo-core 全功能支持
 # 2.4.2
 
 fix [issue42](https://github.com/renmu123/obsidian-image-auto-upload-plugin/issues/42)
+
+# 2.5.0
+
+设置页面支持 i18n
