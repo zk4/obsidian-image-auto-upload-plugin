@@ -49,3 +49,7 @@ picgo-core 全功能支持
 # 2.4.1
 
 优化了 picgo-core 的错误判断&网络图片上传的筛选条件
+
+# 2.4.2
+
+fix [issue42](https://github.com/renmu123/obsidian-image-auto-upload-plugin/issues/42)
