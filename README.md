@@ -62,4 +62,3 @@ You can install picgo-core with npm. Reference to [doc](https://picgo.github.io/
 # Thanks
 
 [obsidian-imgur-plugin](https://github.com/gavvvr/obsidian-imgur-plugin)
-![20211112170145](https://i.loli.net/2021/11/12/9XD1pMs2HZgGvj7.png)
