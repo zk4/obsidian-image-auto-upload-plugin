@@ -20,4 +20,6 @@ export default {
     "当你进行黏贴时，剪切板中的标准 md 图片会被上传",
   absolute: "基于仓库根目录的绝对路径",
   relative: "基于当前笔记的相对路径",
+  fixPath: "修正PATH变量",
+  fixPathWarning: "此选项用于修复Linux和Mac上 PicGo-Core 上传失败的问题。它会修改 Obsidian 内的 PATH 变量，如果 Obsidian 遇到任何BUG，先关闭这个选项试试！"
 };

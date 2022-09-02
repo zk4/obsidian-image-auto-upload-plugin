@@ -65,6 +65,9 @@ export default class imageAutoUploadPlugin extends Plugin {
       this.uploader = this.picGoUploader;
     } else if (this.settings.uploader === "PicGo-Core") {
       this.uploader = this.picGoCoreUploader;
+      if (this.settings.fixPath) {
+        fixPath()
+      }
     } else {
       new Notice("unknown uploader");
     }

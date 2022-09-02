@@ -1,6 +1,7 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import imageAutoUploadPlugin from "./main";
 import { t } from "./lang/helpers";
+import { getOS } from "./utils";
 
 export interface PluginSettings {
   uploadByClipSwitch: boolean;
@@ -9,6 +10,7 @@ export interface PluginSettings {
   picgoCorePath: string;
   menuMode: string;
   workOnNetWork: boolean;
+  fixPath: boolean;
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -18,6 +20,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   picgoCorePath: "",
   menuMode: "auto",
   workOnNetWork: false,
+  fixPath: false,
 };
 
 export class SettingTab extends PluginSettingTab {
@@ -30,6 +33,8 @@ export class SettingTab extends PluginSettingTab {
 
   display(): void {
     let { containerEl } = this;
+
+    const os = getOS()
 
     containerEl.empty();
     containerEl.createEl("h2", { text: t("Plugin Settings") });
@@ -94,6 +99,20 @@ export class SettingTab extends PluginSettingTab {
               await this.plugin.saveSettings();
             })
         );
+
+      if (os !== 'Windows') {
+        new Setting(containerEl)
+          .setName(t("fixPath"))
+          .setDesc(t("fixPathWarning"))
+          .addToggle(toggle =>
+            toggle
+              .setValue(this.plugin.settings.fixPath)
+              .onChange(async value => {
+                this.plugin.settings.fixPath = value;
+                await this.plugin.saveSettings();
+              })
+          );
+      }
     }
 
     new Setting(containerEl)

@@ -20,4 +20,6 @@ export default {
     "When you paste, md standard image link in your clipboard will be auto upload.",
   absolute: "absolute",
   relative: "relative",
+  fixPath: "fixPath",
+  fixPathWarning: "This option is used to fix PicGo-core upload failures on Linux and Mac. It modifies the PATH variable within Obsidian. If Obsidian encounters any bugs, turn off the option, try again! "
 };
