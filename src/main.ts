@@ -17,8 +17,6 @@ import { existsSync, mkdirSync, writeFileSync } from "fs";
 
 import fixPath from 'fix-path'
 
-fixPath()
-
 import {
   isAssetTypeAnImage,
   isAnImage,
