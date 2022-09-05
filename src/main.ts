@@ -15,6 +15,10 @@ import {
 import { resolve, relative, join, parse, posix } from "path";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 
+import fixPath from 'fix-path'
+
+fixPath()
+
 import {
   isAssetTypeAnImage,
   isAnImage,
@@ -48,7 +52,7 @@ export default class imageAutoUploadPlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
-  onunload() {}
+  onunload() { }
 
   async onload() {
     await this.loadSettings();
@@ -61,6 +65,9 @@ export default class imageAutoUploadPlugin extends Plugin {
       this.uploader = this.picGoUploader;
     } else if (this.settings.uploader === "PicGo-Core") {
       this.uploader = this.picGoCoreUploader;
+      if (this.settings.fixPath) {
+        fixPath()
+      }
     } else {
       new Notice("unknown uploader");
     }
@@ -168,8 +175,7 @@ export default class imageAutoUploadPlugin extends Plugin {
     this.helper.setValue(value);
 
     new Notice(
-      `all: ${fileArray.length}\nsuccess: ${imageArray.length}\nfailed: ${
-        fileArray.length - imageArray.length
+      `all: ${fileArray.length}\nsuccess: ${imageArray.length}\nfailed: ${fileArray.length - imageArray.length
       }`
     );
   }
