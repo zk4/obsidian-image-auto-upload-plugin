@@ -57,3 +57,7 @@ fix [issue42](https://github.com/renmu123/obsidian-image-auto-upload-plugin/issu
 # 2.5.0
 
 设置页面支持 i18n
+
+# 2.6.0
+
+修复 MacOs 及 Linux 无法使用环境变量的[问题](https://github.com/renmu123/obsidian-image-auto-upload-plugin/pull/44)
