@@ -15,7 +15,7 @@ import {
 import { resolve, relative, join, parse, posix } from "path";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 
-import fixPath from 'fix-path'
+import fixPath from "fix-path";
 
 import {
   isAssetTypeAnImage,
@@ -50,7 +50,7 @@ export default class imageAutoUploadPlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
-  onunload() { }
+  onunload() {}
 
   async onload() {
     await this.loadSettings();
@@ -64,7 +64,7 @@ export default class imageAutoUploadPlugin extends Plugin {
     } else if (this.settings.uploader === "PicGo-Core") {
       this.uploader = this.picGoCoreUploader;
       if (this.settings.fixPath) {
-        fixPath()
+        fixPath();
       }
     } else {
       new Notice("unknown uploader");
@@ -173,7 +173,8 @@ export default class imageAutoUploadPlugin extends Plugin {
     this.helper.setValue(value);
 
     new Notice(
-      `all: ${fileArray.length}\nsuccess: ${imageArray.length}\nfailed: ${fileArray.length - imageArray.length
+      `all: ${fileArray.length}\nsuccess: ${imageArray.length}\nfailed: ${
+        fileArray.length - imageArray.length
       }`
     );
   }
@@ -426,11 +427,7 @@ export default class imageAutoUploadPlugin extends Plugin {
           }
 
           // 剪贴板中是图片时进行上传
-          if (
-            isCopyImageFile() ||
-            files.length !== 0 ||
-            files[0]?.type.startsWith("image")
-          ) {
+          if (files.length !== 0 && files[0]?.type.startsWith("image")) {
             this.uploadFileAndEmbedImgurImage(
               editor,
               async (editor: Editor, pasteId: string) => {
