@@ -65,3 +65,7 @@ fix [issue42](https://github.com/renmu123/obsidian-image-auto-upload-plugin/issu
 # 2.6.1
 
 修复所有环境执行 fixPath 的[错误](https://github.com/renmu123/obsidian-image-auto-upload-plugin/pull/45)
+
+# 2.6.2
+
+修复 [黏贴非图片文件时也会自动上传的 bug](https://github.com/renmu123/obsidian-image-auto-upload-plugin/issues/19)。
