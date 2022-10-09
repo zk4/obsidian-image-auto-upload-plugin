@@ -5,6 +5,7 @@ import {
   Editor,
   Menu,
   MenuItem,
+
   TFile,
   normalizePath,
   Notice,
@@ -431,7 +432,7 @@ export default class imageAutoUploadPlugin extends Plugin {
             this.uploadFileAndEmbedImgurImage(
               editor,
               async (editor: Editor, pasteId: string) => {
-                let res = await this.uploader.uploadFileByClipboard();
+                let res = await this.uploader.uploadFileByClipboard(files);
 
                 if (res.code !== 0) {
                   this.handleFailedUpload(editor, pasteId, res.msg);

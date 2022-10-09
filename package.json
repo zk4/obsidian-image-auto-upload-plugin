@@ -1,5 +1,5 @@
 {
-  "name": "obsidian-imgur-plugin",
+  "name": "picgo-image-uploader",
   "version": "2.6.2",
   "description": "This plugin uploads images from your clipboard by picGo and embeds uploaded image to your note",
   "main": "main.js",
@@ -11,7 +11,7 @@
     "obsidian.md",
     "picgo"
   ],
-  "author": "renmu",
+  "author": "zk4",
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^15.1.0",

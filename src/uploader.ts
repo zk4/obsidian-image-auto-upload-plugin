@@ -1,8 +1,10 @@
-import { PluginSettings } from "./setting";
-import { streamToString, getLastImage } from "./utils";
-import { exec } from "child_process";
-import { Notice, requestUrl } from "obsidian";
-
+import {PluginSettings} from "./setting";
+import {streamToString, getLastImage} from "./utils";
+import {exec} from "child_process";
+import {Notice, requestUrl} from "obsidian";
+const fs = require("fs")
+const os = require('os')
+const path = require('path')
 interface PicGoResponse {
   success: string;
   msg: string;
@@ -20,15 +22,15 @@ export class PicGoUploader {
     const response = await requestUrl({
       url: this.settings.uploadServer,
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ list: fileList }),
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({list: fileList}),
     });
 
     const data = response.json;
     return data;
   }
 
-  async uploadFileByClipboard(): Promise<any> {
+  async uploadFileByClipboard(files: any): Promise<any> {
     const res = await requestUrl({
       url: this.settings.uploadServer,
       method: "POST",
@@ -37,7 +39,7 @@ export class PicGoUploader {
     let data: PicGoResponse = res.json;
 
     if (res.status !== 200) {
-      let err = { response: data, body: data.msg };
+      let err = {response: data, body: data.msg};
       return {
         code: -1,
         msg: data.msg,
@@ -89,8 +91,8 @@ export class PicGoCoreUploader {
   }
 
   // PicGo-Core 上传处理
-  async uploadFileByClipboard() {
-    const res = await this.uploadByClip();
+  async uploadFileByClipboard(files: any) {
+    const res = await this.uploadByClip(files);
     const splitList = res.split("\n");
     const lastImage = getLastImage(splitList);
 
@@ -110,20 +112,48 @@ export class PicGoCoreUploader {
     }
   }
 
+  makeid(length: number) {
+    var result = '';
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() *
+        charactersLength));
+    }
+    return result;
+  }
+  dateStamp(){
+    return  (new Date()).toISOString().replace(/[^0-9]/g, "")+"."+this.makeid(5);
+  }
+  async saveClipToFile(file: any) {
+    let result = await new Promise((resolve) => {
+      let fileReader = new FileReader();
+      fileReader.onload = (e) => resolve(fileReader.result);
+      fileReader.readAsArrayBuffer(file);
+    });
+
+    const fileName = path.join(os.homedir(),`${this.dateStamp()}.jpg`)
+    fs.writeFileSync(fileName, Buffer.from(result as ArrayBuffer));
+    return fileName;
+  }
   // PicGo-Core的剪切上传反馈
-  async uploadByClip() {
+  async uploadByClip(files: any) {
     let command;
+    let tmpPath;
     if (this.settings.picgoCorePath) {
-      command = `${this.settings.picgoCorePath} upload`;
+      tmpPath = await this.saveClipToFile(files[0])
+      command = `${this.settings.picgoCorePath} upload ${tmpPath}`;
     } else {
       command = `picgo upload`;
     }
     const res = await this.exec(command);
+    if(tmpPath)
+      fs.unlinkSync(tmpPath)
     return res;
   }
 
   async exec(command: string) {
-    let { stdout } = await exec(command);
+    let {stdout} = await exec(command);
     const res = await streamToString(stdout);
     return res;
   }
