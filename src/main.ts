@@ -113,11 +113,19 @@ export default class imageAutoUploadPlugin extends Plugin {
     this.registerFileMenu();
   }
 
+  dateStamp(){
+    return  (new Date()).toISOString().replace(/[^0-9]/g, "")+".";
+  }
   async downloadAllImageFiles() {
-    const folderPath = this.getFileAssetPath();
+    let folderPath = this.getFileAssetPath();
     const fileArray = this.helper.getAllFiles();
+    console.log("folderPath",folderPath)
     if (!existsSync(folderPath)) {
-      mkdirSync(folderPath);
+      try{
+        mkdirSync(folderPath);
+      }catch(e){
+        console.error(e)
+      }
     }
 
     let imageArray = [];
@@ -126,29 +134,27 @@ export default class imageAutoUploadPlugin extends Plugin {
         continue;
       }
 
-      console.log("1")
       const url = file.path;
       const asset = getUrlAsset(url);
       const t=asset.substr(asset.lastIndexOf("."))
       console.log("asset",asset,"t",t)
       if (!isAnImage(t)) {
-        console.log("2")
         continue;
       }
-        console.log("3")
       let [name, ext] = [
         decodeURI(parse(asset).name).replaceAll(/[\\\\/:*?\"<>|]/g, "-"),
         parse(asset).ext,
       ];
-        console.log("4")
       // 如果文件名已存在，则用随机值替换
       if (existsSync(join(folderPath, encodeURI(asset)))) {
-        name = (Math.random() + 1).toString(36).substr(2, 5);
-        console.log("5")
+        name = this.dateStamp()+(Math.random() + 1).toString(36).substr(2, 5);
+        // console.log("5")
+        // new Notice(`${join(folderPath, encodeURI(asset))} exists`)
+        // continue;
+
       }
       name = `image-${name}`;
 
-      console.log("6")
       const response = await this.download(
         url,
         join(folderPath, `${name}${ext}`)
@@ -201,11 +207,19 @@ export default class imageAutoUploadPlugin extends Plugin {
       this.app.workspace.getActiveFile().path
     );
 
+      console.log("basePath",basePath)
+      console.log("assetFolder",assetFolder)
     // 当前文件夹下的子文件夹
     if (assetFolder.startsWith("./")) {
+      console.log("activeFile.parent.path",activeFile.parent.path)
+      console.log("try fix:",join(basePath, activeFile.parent.path))
       const activeFolder = decodeURI(resolve(basePath, activeFile.parent.path));
+      console.log("activeFolder",activeFolder,"assetFolder",assetFolder)
+      console.log("try return",join(join(basePath, activeFile.parent.path), assetFolder))
+      console.log("actual return",join(activeFolder, assetFolder))
       return join(activeFolder, assetFolder);
     } else {
+      console.log("111111111111111")
       // 根文件夹
       return join(basePath, assetFolder);
     }
@@ -348,7 +362,7 @@ export default class imageAutoUploadPlugin extends Plugin {
         } else {
           abstractImageFile = decodeURI(join(basePath, encodedUri));
 
-          // 当解析为绝对路径却找不到文件，尝试解析为相对路径
+          // 1.当解析为绝对路径却找不到文件，尝试解析为相对路径
           if (!existsSync(abstractImageFile)) {
             abstractImageFile = decodeURI(
               join(
@@ -357,11 +371,24 @@ export default class imageAutoUploadPlugin extends Plugin {
               )
             );
           }
+          // 2. try assets folder
+          console.log("-------------------")
+          if (!existsSync(abstractImageFile)) {
+          console.log("---------2---------")
+            abstractImageFile = decodeURI(
+              join(
+                basePath,
+                posix.resolve(posix.join("/assets", thisPath.parent.path), encodedUri)
+              )
+            );
+          }
         }
 
-        console.log("abstractImageFile",abstractImageFile)
+        console.log("abstractImageFile2",abstractImageFile)
+        const existS = existsSync(abstractImageFile)
+        console.log("existS",existS)
         if (
-          existsSync(abstractImageFile) &&
+           existS &&
           isAssetTypeAnImage(abstractImageFile)
         ) {
           imageList.push({
