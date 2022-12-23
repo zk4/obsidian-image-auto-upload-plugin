@@ -174,7 +174,7 @@ export default class imageAutoUploadPlugin extends Plugin {
     this.helper.setValue(value);
 
     new Notice(
-      `all: ${fileArray.length}\nsuccess: ${imageArray.length}\nfailed: ${
+      `folder:${folderPath}\n all: ${fileArray.length}\nsuccess: ${imageArray.length}\nfailed: ${
         fileArray.length - imageArray.length
       }`
     );
@@ -310,6 +310,7 @@ export default class imageAutoUploadPlugin extends Plugin {
 
   // uploda all file
   uploadAllFile() {
+    // debugger
     let key = this.helper.getValue();
 
     const thisPath = this.app.vault.getAbstractFileByPath(
@@ -349,6 +350,7 @@ export default class imageAutoUploadPlugin extends Plugin {
           }
         }
 
+        console.log("abstractImageFile",abstractImageFile)
         if (
           existsSync(abstractImageFile) &&
           isAssetTypeAnImage(abstractImageFile)

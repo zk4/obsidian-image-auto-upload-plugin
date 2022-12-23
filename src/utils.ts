@@ -9,7 +9,7 @@ export function isAnImage(ext: string) {
 }
 export function isAssetTypeAnImage(path: string): Boolean {
   return (
-    [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".svg", ".tiff"].indexOf(
+    [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".svg", ".tiff",".webp"].indexOf(
       extname(path).toLowerCase()
     ) !== -1
   );

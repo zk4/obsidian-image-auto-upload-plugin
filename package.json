@@ -1,9 +1,10 @@
 {
-  "name": "picgo-image-uploader",
+  "name": "zk-image-uploader",
   "version": "2.6.2",
   "description": "This plugin uploads images from your clipboard by picGo and embeds uploaded image to your note",
   "main": "main.js",
   "scripts": {
+    "start": "pnpm run build && node esbuild.config.mjs",
     "dev": "rollup --config rollup.config.js -w",
     "build": "rollup --config rollup.config.js"
   },
@@ -20,6 +21,7 @@
     "@rollup/plugin-typescript": "^6.0.0",
     "@types/electron": "^1.6.10",
     "@types/node": "^14.14.2",
+    "esbuild-plugin-copy": "^2.0.1",
     "obsidian": "^0.15.9",
     "rollup": "^2.32.1",
     "tslib": "^2.0.3",
