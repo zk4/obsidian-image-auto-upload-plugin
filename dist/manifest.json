@@ -1,0 +1,10 @@
+{
+  "id": "zk-image-uploader",
+  "name": "zk image uploader",
+  "version": "2.6.2",
+  "minAppVersion": "0.10.7",
+  "description": "This plugin uploads images from your clipboard by PicGo",
+  "author": "zk",
+  "authorUrl": "https://github.com/renmu123/obsidian-image-auto-upload-plugin",
+  "isDesktopOnly": false
+}
