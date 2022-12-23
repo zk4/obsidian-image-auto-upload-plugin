@@ -2,14 +2,15 @@ import { resolve, extname, relative, join, parse, posix } from "path";
 import { Readable } from "stream";
 import { clipboard } from "electron";
 
+const imgExts = [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".svg", ".tiff",".webp"]
 export function isAnImage(ext: string) {
-  return [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".svg", ".tiff"].includes(
+  return imgExts.includes(
     ext.toLowerCase()
   );
 }
 export function isAssetTypeAnImage(path: string): Boolean {
   return (
-    [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".svg", ".tiff",".webp"].indexOf(
+    imgExts.indexOf(
       extname(path).toLowerCase()
     ) !== -1
   );

@@ -126,25 +126,34 @@ export default class imageAutoUploadPlugin extends Plugin {
         continue;
       }
 
+      console.log("1")
       const url = file.path;
       const asset = getUrlAsset(url);
-      if (!isAnImage(asset.substr(asset.lastIndexOf(".")))) {
+      const t=asset.substr(asset.lastIndexOf("."))
+      console.log("asset",asset,"t",t)
+      if (!isAnImage(t)) {
+        console.log("2")
         continue;
       }
+        console.log("3")
       let [name, ext] = [
         decodeURI(parse(asset).name).replaceAll(/[\\\\/:*?\"<>|]/g, "-"),
         parse(asset).ext,
       ];
+        console.log("4")
       // 如果文件名已存在，则用随机值替换
       if (existsSync(join(folderPath, encodeURI(asset)))) {
         name = (Math.random() + 1).toString(36).substr(2, 5);
+        console.log("5")
       }
       name = `image-${name}`;
 
+      console.log("6")
       const response = await this.download(
         url,
         join(folderPath, `${name}${ext}`)
       );
+      console.log("download success",response)
       if (response.ok) {
         const activeFolder = this.app.vault.getAbstractFileByPath(
           this.app.workspace.getActiveFile().path
